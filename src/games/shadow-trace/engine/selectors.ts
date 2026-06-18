@@ -1,4 +1,5 @@
-import type { CaseV2, CaseProgressV2, LeadNode, Choice } from './types';
+import type { CaseV2, CaseProgressV2, LeadNode, Choice, Evidence } from './types';
+import type { Hotspot, Artifact } from './media-types';
 import { evaluateCondition } from './conditions';
 
 export interface OpenNode {
@@ -17,4 +18,18 @@ export function getOpenNodes(caseData: CaseV2, state: CaseProgressV2): OpenNode[
 /** Choices on a node whose `requires` currently passes. */
 export function getAvailableChoices(node: LeadNode, state: CaseProgressV2): Choice[] {
   return (node.choices ?? []).filter((c) => !c.requires || evaluateCondition(c.requires, state));
+}
+
+/** Hotspots on the evidence's media whose reveal condition currently passes. */
+export function getVisibleHotspots(evidence: Evidence, state: CaseProgressV2): Hotspot[] {
+  return (evidence.media?.hotspots ?? []).filter(
+    (h) => !h.revealRequires || evaluateCondition(h.revealRequires, state),
+  );
+}
+
+/** Forgery artifacts on the evidence's media the player can currently detect. */
+export function getDetectedArtifacts(evidence: Evidence, state: CaseProgressV2): Artifact[] {
+  return (evidence.media?.artifacts ?? []).filter(
+    (a) => !a.detectRequires || evaluateCondition(a.detectRequires, state),
+  );
 }

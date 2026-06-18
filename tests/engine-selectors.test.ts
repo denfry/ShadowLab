@@ -1,5 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { getOpenNodes, getAvailableChoices } from '@/games/shadow-trace/engine/selectors';
+import {
+  getOpenNodes,
+  getAvailableChoices,
+  getVisibleHotspots,
+  getDetectedArtifacts,
+} from '@/games/shadow-trace/engine/selectors';
 import { createCaseProgress } from '@/games/shadow-trace/engine/state';
 import { sampleCase } from './fixtures/sample-case-v2';
 import type { CaseProgressV2, LeadNode } from '@/games/shadow-trace/engine/types';
@@ -39,5 +44,44 @@ describe('getAvailableChoices', () => {
 
   it('returns [] for a node with no choices', () => {
     expect(getAvailableChoices({ ...node, choices: undefined }, createCaseProgress(sampleCase))).toEqual([]);
+  });
+});
+
+describe('getVisibleHotspots', () => {
+  const photo = sampleCase.evidence.find((e) => e.id === 'e_photo')!;
+
+  it('returns hotspots with no reveal condition', () => {
+    const hs = getVisibleHotspots(photo, createCaseProgress(sampleCase));
+    expect(hs.map((h) => h.id)).toEqual(['h_clock']);
+  });
+
+  it('hides a hotspot whose revealRequires is unmet', () => {
+    const gated = {
+      ...photo,
+      media: { ...photo.media!, hotspots: [{ ...photo.media!.hotspots[0], revealRequires: { hasFlag: 'never' } }] },
+    };
+    expect(getVisibleHotspots(gated, createCaseProgress(sampleCase))).toEqual([]);
+  });
+
+  it('returns [] for evidence with no media', () => {
+    const log = sampleCase.evidence.find((e) => e.id === 'e_log')!;
+    expect(getVisibleHotspots(log, createCaseProgress(sampleCase))).toEqual([]);
+  });
+});
+
+describe('getDetectedArtifacts', () => {
+  const photo = sampleCase.evidence.find((e) => e.id === 'e_photo')!;
+
+  it('returns artifacts with no detect condition', () => {
+    const arts = getDetectedArtifacts(photo, createCaseProgress(sampleCase));
+    expect(arts.map((a) => a.id)).toEqual(['a_clock']);
+  });
+
+  it('hides an artifact whose detectRequires is unmet', () => {
+    const gated = {
+      ...photo,
+      media: { ...photo.media!, artifacts: [{ ...photo.media!.artifacts![0], detectRequires: { hasFlag: 'never' } }] },
+    };
+    expect(getDetectedArtifacts(gated, createCaseProgress(sampleCase))).toEqual([]);
   });
 });
