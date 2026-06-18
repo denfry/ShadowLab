@@ -139,6 +139,7 @@ export interface CaseProgressV2 {
   caseId: string;
   openNodes: string[];
   visitedNodes: string[];
+  inspectedHotspots: string[];
   discoveredEvidence: string[];
   discoveredStatements: string[];
   flags: Record<string, boolean | number | string>;
@@ -162,6 +163,17 @@ export interface DeductionResultV2 {
   fakesTotal: number;
   accusationQuality: EndingQuality;
   flagsForCampaign: string[];
+}
+
+/** A derived dossier card: one atomic fact the player has learned. Its `source`
+ *  doubles as a FactRef the board's addLink consumes. */
+export interface Fact {
+  id: string;
+  source: { type: 'evidence' | 'statement' | 'hotspot' | 'metadata'; refId: string };
+  text: string;
+  subjectIds: string[];
+  time?: TimeSpan;
+  place?: string;
 }
 
 // ---- campaign (type-only; consumers arrive in Этап 3) ----

@@ -15,6 +15,10 @@ describe('createCaseProgress', () => {
     expect(p.discoveredEvidence).toEqual([]);
     expect(p.foundContradictions).toEqual([]);
   });
+
+  it('seeds an empty inspectedHotspots list', () => {
+    expect(createCaseProgress(sampleCase).inspectedHotspots).toEqual([]);
+  });
 });
 
 describe('applyEffects', () => {

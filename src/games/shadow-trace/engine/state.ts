@@ -8,6 +8,7 @@ export function createCaseProgress(caseData: CaseV2): CaseProgressV2 {
     caseId: caseData.id,
     openNodes: [...caseData.startNodeIds],
     visitedNodes: [],
+    inspectedHotspots: [],
     discoveredEvidence: [],
     discoveredStatements: [],
     flags: {},
@@ -28,6 +29,7 @@ export function applyEffects(state: CaseProgressV2, effects: Effect[] | undefine
   const next: CaseProgressV2 = {
     ...state,
     openNodes: [...state.openNodes],
+    inspectedHotspots: [...state.inspectedHotspots],
     discoveredEvidence: [...state.discoveredEvidence],
     discoveredStatements: [...state.discoveredStatements],
     foundContradictions: [...state.foundContradictions],
