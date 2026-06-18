@@ -70,4 +70,41 @@ describe('validateCase', () => {
     expect(r.ok).toBe(false);
     expect(r.issues.some((i) => i.code === 'unreachable_node' && i.message.includes('n_lab'))).toBe(true);
   });
+
+  it('flags duplicate ids across collections', () => {
+    const broken: CaseV2 = { ...sampleCase, evidence: [...sampleCase.evidence, { ...sampleCase.evidence[0] }] };
+    const r = validateCase(broken);
+    expect(r.ok).toBe(false);
+    expect(r.issues.some((i) => i.code === 'duplicate_id')).toBe(true);
+  });
+
+  it('flags an effect pointing at a missing target', () => {
+    const broken: CaseV2 = {
+      ...sampleCase,
+      nodes: sampleCase.nodes.map((n) => (n.id === 'n_scene' ? { ...n, grants: [{ addEvidence: 'e_ghost' }] } : n)),
+    };
+    const r = validateCase(broken);
+    expect(r.ok).toBe(false);
+    expect(r.issues.some((i) => i.code === 'bad_effect_target')).toBe(true);
+  });
+
+  it('flags an unknown suspect referenced by an accuse ending', () => {
+    const broken: CaseV2 = {
+      ...sampleCase,
+      endings: sampleCase.endings.map((e) => (e.id === 'end_partial' ? { ...e, requires: { accuse: 's_ghost' } } : e)),
+    };
+    const r = validateCase(broken);
+    expect(r.ok).toBe(false);
+    expect(r.issues.some((i) => i.code === 'bad_suspect_ref')).toBe(true);
+  });
+
+  it('flags a statement whose speaker is not a suspect', () => {
+    const broken: CaseV2 = {
+      ...sampleCase,
+      statements: sampleCase.statements.map((s) => ({ ...s, speakerId: 's_ghost' })),
+    };
+    const r = validateCase(broken);
+    expect(r.ok).toBe(false);
+    expect(r.issues.some((i) => i.code === 'bad_suspect_ref')).toBe(true);
+  });
 });

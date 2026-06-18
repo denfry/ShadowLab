@@ -86,6 +86,14 @@ function obtainableRef(ref: FactRef, o: Obtainable): boolean {
   return o.evidence.has(ref.refId); // evidence | metadata both keyed by evidence id
 }
 
+/** Collect every suspect id referenced inside an `accuse` condition anywhere in a tree. */
+function collectAccuseTargets(cond: Condition, out: Set<string>): void {
+  if ('accuse' in cond) out.add(cond.accuse);
+  else if ('all' in cond) cond.all.forEach((c) => collectAccuseTargets(c, out));
+  else if ('any' in cond) cond.any.forEach((c) => collectAccuseTargets(c, out));
+  else if ('not' in cond) collectAccuseTargets(cond.not, out);
+}
+
 export function validateCase(caseData: CaseV2): ValidationResult {
   const issues: ValidationIssue[] = [];
   const nodeIds = new Set(caseData.nodes.map((n) => n.id));
@@ -160,6 +168,73 @@ export function validateCase(caseData: CaseV2): ValidationResult {
   }
   if (!caseData.endings.some((e) => e.quality === 'truth' && satisfiable(e.requires, o))) {
     issues.push({ code: 'no_truth_path', message: 'Нет достижимой truth-концовки' });
+  }
+
+  // 6. duplicate ids across all keyed collections
+  const allIds = [
+    ...caseData.nodes.map((n) => n.id),
+    ...caseData.evidence.map((e) => e.id),
+    ...caseData.statements.map((s) => s.id),
+    ...caseData.contradictions.map((c) => c.id),
+    ...caseData.endings.map((e) => e.id),
+    ...caseData.suspects.map((s) => s.id),
+  ];
+  const seenIds = new Set<string>();
+  for (const id of allIds) {
+    if (seenIds.has(id)) issues.push({ code: 'duplicate_id', message: `Дублирующийся id: ${id}` });
+    seenIds.add(id);
+  }
+
+  // 7. effect targets resolve (setFlag is free-form and intentionally NOT checked —
+  //    flags, incl. campaign flags, may be created on the fly)
+  const evidenceIds = new Set(caseData.evidence.map((e) => e.id));
+  const statementIds = new Set(caseData.statements.map((s) => s.id));
+  const effects: Effect[] = [];
+  for (const n of caseData.nodes) {
+    effects.push(...(n.grants ?? []));
+    for (const ch of n.choices ?? []) effects.push(...ch.effects);
+  }
+  for (const c of caseData.contradictions) effects.push(...(c.unlocks ?? []));
+  for (const e of caseData.endings) effects.push(...(e.campaignEffects ?? []));
+  for (const e of caseData.evidence) {
+    for (const h of e.media?.hotspots ?? []) effects.push(...(h.grants ?? []));
+    for (const a of e.media?.artifacts ?? []) effects.push(...(a.grants ?? []));
+  }
+  for (const e of effects) {
+    if (e.addNode && !nodeIds.has(e.addNode)) {
+      issues.push({ code: 'bad_effect_target', message: `addNode → неизвестный узел ${e.addNode}` });
+    }
+    if (e.lockNode && !nodeIds.has(e.lockNode)) {
+      issues.push({ code: 'bad_effect_target', message: `lockNode → неизвестный узел ${e.lockNode}` });
+    }
+    if (e.addEvidence && !evidenceIds.has(e.addEvidence)) {
+      issues.push({ code: 'bad_effect_target', message: `addEvidence → неизвестная улика ${e.addEvidence}` });
+    }
+    if (e.addStatement && !statementIds.has(e.addStatement)) {
+      issues.push({ code: 'bad_effect_target', message: `addStatement → неизвестное показание ${e.addStatement}` });
+    }
+  }
+
+  // 8. suspect refs resolve
+  const suspectIds = new Set(caseData.suspects.map((s) => s.id));
+  for (const e of caseData.evidence) {
+    for (const sid of e.relatedSuspectIds) {
+      if (!suspectIds.has(sid)) {
+        issues.push({ code: 'bad_suspect_ref', message: `Улика ${e.id}: неизвестный подозреваемый ${sid}` });
+      }
+    }
+  }
+  for (const st of caseData.statements) {
+    if (!suspectIds.has(st.speakerId)) {
+      issues.push({ code: 'bad_suspect_ref', message: `Показание ${st.id}: неизвестный говорящий ${st.speakerId}` });
+    }
+  }
+  const accuseTargets = new Set<string>();
+  for (const end of caseData.endings) collectAccuseTargets(end.requires, accuseTargets);
+  for (const t of accuseTargets) {
+    if (!suspectIds.has(t)) {
+      issues.push({ code: 'bad_suspect_ref', message: `Концовка ссылается на неизвестного подозреваемого: ${t}` });
+    }
   }
 
   return { ok: issues.length === 0, issues };
