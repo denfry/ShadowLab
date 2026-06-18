@@ -108,12 +108,10 @@ export function getCaseFile(caseData: CaseArchive, state: ArchiveProgress): Case
     pinnedEntities: state.pinnedEntities
       .map((id) => findEntity(caseData, id))
       .filter((e): e is Entity => Boolean(e)),
-    suspicions: state.suspicions
-      .map((s) => {
-        const record = findRecord(caseData, s.recordId);
-        return record ? { record, note: s.note } : null;
-      })
-      .filter((x): x is { record: ArchiveRecord; note?: string } => Boolean(x)),
+    suspicions: state.suspicions.flatMap((s) => {
+      const record = findRecord(caseData, s.recordId);
+      return record ? [{ record, note: s.note }] : [];
+    }),
     notes: [...state.notes],
   };
 }
