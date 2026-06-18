@@ -18,7 +18,11 @@ export function createCaseProgress(caseData: CaseV2): CaseProgressV2 {
   };
 }
 
-/** Apply a list of effects immutably. Set-like effects are idempotent. */
+/**
+ * Apply a list of effects immutably (the returned state shares no mutable array
+ * with the input). addEvidence/addStatement/addNode use set semantics (idempotent);
+ * setFlag overwrites unconditionally; lockNode removes.
+ */
 export function applyEffects(state: CaseProgressV2, effects: Effect[] | undefined): CaseProgressV2 {
   if (!effects || effects.length === 0) return state;
   const next: CaseProgressV2 = {
@@ -26,6 +30,9 @@ export function applyEffects(state: CaseProgressV2, effects: Effect[] | undefine
     openNodes: [...state.openNodes],
     discoveredEvidence: [...state.discoveredEvidence],
     discoveredStatements: [...state.discoveredStatements],
+    foundContradictions: [...state.foundContradictions],
+    links: [...state.links],
+    notes: [...state.notes],
     flags: { ...state.flags },
   };
   for (const e of effects) {

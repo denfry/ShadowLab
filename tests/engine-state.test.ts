@@ -42,6 +42,7 @@ describe('visitNode', () => {
     const next = visitNode(sampleCase, p, 'n_scene');
     expect(next.discoveredEvidence).toContain('e_photo');
     expect(next.visitedNodes).toContain('n_scene');
+    expect(p.visitedNodes).toEqual([]); // original untouched
   });
 
   it('refuses to visit a locked or gated node', () => {
@@ -65,5 +66,20 @@ describe('chooseOption', () => {
     const next = chooseOption(withChoice, p, 'n_interview', 'press');
     expect(next.flags.pressed).toBe(true);
     expect(next.choicesMade.n_interview).toBe('press');
+  });
+
+  it('refuses a gated choice whose requires is unmet', () => {
+    const gated: CaseV2 = {
+      ...sampleCase,
+      nodes: sampleCase.nodes.map((n) =>
+        n.id === 'n_interview'
+          ? { ...n, choices: [{ id: 'locked', label: 'Заперто', requires: { hasFlag: 'never' }, effects: [{ setFlag: 'should_not_set' }] }] }
+          : n,
+      ),
+    };
+    const p = createCaseProgress(gated);
+    const next = chooseOption(gated, p, 'n_interview', 'locked');
+    expect(next).toBe(p);
+    expect(next.flags.should_not_set).toBeUndefined();
   });
 });
