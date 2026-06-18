@@ -1,0 +1,43 @@
+import { describe, expect, it } from 'vitest';
+import { getOpenNodes, getAvailableChoices } from '@/games/shadow-trace/engine/selectors';
+import { createCaseProgress } from '@/games/shadow-trace/engine/state';
+import { sampleCase } from './fixtures/sample-case-v2';
+import type { CaseProgressV2, LeadNode } from '@/games/shadow-trace/engine/types';
+
+describe('getOpenNodes', () => {
+  it('returns the open nodes flagged enterable', () => {
+    const open = getOpenNodes(sampleCase, createCaseProgress(sampleCase));
+    expect(open.map((o) => o.node.id)).toEqual(['n_scene', 'n_interview']);
+    expect(open.every((o) => o.enterable)).toBe(true);
+  });
+
+  it('marks an open node whose requires is unmet as not enterable', () => {
+    const state: CaseProgressV2 = { ...createCaseProgress(sampleCase), openNodes: ['n_lab'] };
+    const open = getOpenNodes(sampleCase, state);
+    expect(open).toHaveLength(1);
+    expect(open[0].node.id).toBe('n_lab');
+    expect(open[0].enterable).toBe(false); // requires foundContradiction c_time, not found
+  });
+});
+
+describe('getAvailableChoices', () => {
+  const node: LeadNode = {
+    id: 'n_x',
+    type: 'interrogation',
+    title: 'X',
+    body: [],
+    choices: [
+      { id: 'open', label: 'Open', effects: [] },
+      { id: 'gated', label: 'Gated', requires: { hasFlag: 'never' }, effects: [] },
+    ],
+  };
+
+  it('returns only choices whose requires passes', () => {
+    const choices = getAvailableChoices(node, createCaseProgress(sampleCase));
+    expect(choices.map((c) => c.id)).toEqual(['open']);
+  });
+
+  it('returns [] for a node with no choices', () => {
+    expect(getAvailableChoices({ ...node, choices: undefined }, createCaseProgress(sampleCase))).toEqual([]);
+  });
+});
