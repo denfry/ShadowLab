@@ -5,7 +5,7 @@ import { matchContradiction } from './contradictions';
 const COLD_CASE_FALLBACK: Ending = {
   id: 'cold_case_default',
   title: 'Дело закрыто без ответа',
-  requires: { all: [] },
+  requires: { all: [] }, // never evaluated; only returned from the ?? fallback path
   quality: 'cold_case',
   epilogue: ['Улик не хватило. Дело отправлено в архив.'],
 };
@@ -59,6 +59,7 @@ export function scoreCaseV2(caseData: CaseV2, state: CaseProgressV2): DeductionR
 
   return {
     rank: rankFor(score),
+    score,
     contradictionsFound,
     contradictionsTotal,
     correctLinks,

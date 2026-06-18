@@ -35,6 +35,13 @@ describe('resolveEnding', () => {
   it('returns cold_case catch-all with no accusation', () => {
     expect(resolveEnding(sampleCase, createCaseProgress(sampleCase)).quality).toBe('cold_case');
   });
+
+  it('uses the synthetic cold_case fallback when no ending matches', () => {
+    const noEndings = { ...sampleCase, endings: [] };
+    const r = resolveEnding(noEndings, createCaseProgress(sampleCase));
+    expect(r.id).toBe('cold_case_default');
+    expect(r.quality).toBe('cold_case');
+  });
 });
 
 describe('scoreCaseV2', () => {
@@ -48,6 +55,7 @@ describe('scoreCaseV2', () => {
     expect(r.correctLinks).toBe(1);
     expect(r.falseLinks).toBe(0);
     expect(r.rank).toBe('S');
+    expect(r.score).toBe(100);
     expect(r.flagsForCampaign).toEqual(['eron_jailed']);
   });
 
@@ -56,7 +64,8 @@ describe('scoreCaseV2', () => {
     p = addLink(sampleCase, p, { fromRef: stRef, toRef: { type: 'evidence', refId: 'e_log' }, relation: 'contradicts' });
     const r = scoreCaseV2(sampleCase, p);
     expect(r.falseLinks).toBe(1);
-    expect(r.rank).not.toBe('S');
+    expect(r.score).toBe(90);
+    expect(r.rank).toBe('A');
   });
 
   it('scores a miscarriage low', () => {

@@ -153,6 +153,7 @@ export type Rank = 'F' | 'C' | 'B' | 'A' | 'S';
 
 export interface DeductionResultV2 {
   rank: Rank;
+  score: number;
   contradictionsFound: number;
   contradictionsTotal: number;
   correctLinks: number;
