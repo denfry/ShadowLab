@@ -25,6 +25,7 @@ describe('evaluateCondition', () => {
     expect(evaluateCondition({ foundContradiction: 'c_time' }, state)).toBe(true);
     expect(evaluateCondition({ accuse: 's_eron' }, state)).toBe(true);
     expect(evaluateCondition({ accuse: 's_mara' }, state)).toBe(false);
+    expect(evaluateCondition({ accuse: 's_eron' }, { ...state, accusation: undefined })).toBe(false);
   });
 
   it('composes all / any / not', () => {
