@@ -63,4 +63,11 @@ describe('validateCase', () => {
     expect(r.ok).toBe(false);
     expect(r.issues.some((i) => i.code === 'no_truth_path')).toBe(true);
   });
+
+  it('fixpoint: removing the contradiction unlock makes the gated node unreachable', () => {
+    const broken: CaseV2 = { ...sampleCase, contradictions: [] };
+    const r = validateCase(broken);
+    expect(r.ok).toBe(false);
+    expect(r.issues.some((i) => i.code === 'unreachable_node' && i.message.includes('n_lab'))).toBe(true);
+  });
 });

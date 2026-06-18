@@ -26,17 +26,34 @@ function satisfiable(cond: Condition, o: Obtainable): boolean {
   if ('accuse' in cond) return true; // the player may always accuse anyone
   if ('all' in cond) return cond.all.every((c) => satisfiable(c, o));
   if ('any' in cond) return cond.any.some((c) => satisfiable(c, o));
-  if ('not' in cond) return true; // optimistically: simply don't obtain the negated atom
+  // Optimistic: assume the negated atom is simply never obtained.
+  // Known limitation: cannot detect an irreversibly-set flag that makes `not` impossible.
+  if ('not' in cond) return true;
   return false;
 }
 
+// NOTE: `lockNode` is intentionally NOT modelled. Optimistic reachability asks
+// "does SOME playthrough reach this?", so it assumes the favourable path where
+// locks never fire. Modelling locks here would risk false positives on solvable cases.
 function applyEffectsOptimistic(effects: Effect[] | undefined, o: Obtainable): boolean {
   let changed = false;
   for (const e of effects ?? []) {
-    if (e.setFlag && !o.flags.has(e.setFlag)) (o.flags.add(e.setFlag), (changed = true));
-    if (e.addNode && !o.nodes.has(e.addNode)) (o.nodes.add(e.addNode), (changed = true));
-    if (e.addEvidence && !o.evidence.has(e.addEvidence)) (o.evidence.add(e.addEvidence), (changed = true));
-    if (e.addStatement && !o.statements.has(e.addStatement)) (o.statements.add(e.addStatement), (changed = true));
+    if (e.setFlag && !o.flags.has(e.setFlag)) {
+      o.flags.add(e.setFlag);
+      changed = true;
+    }
+    if (e.addNode && !o.nodes.has(e.addNode)) {
+      o.nodes.add(e.addNode);
+      changed = true;
+    }
+    if (e.addEvidence && !o.evidence.has(e.addEvidence)) {
+      o.evidence.add(e.addEvidence);
+      changed = true;
+    }
+    if (e.addStatement && !o.statements.has(e.addStatement)) {
+      o.statements.add(e.addStatement);
+      changed = true;
+    }
   }
   return changed;
 }
@@ -121,10 +138,17 @@ export function validateCase(caseData: CaseV2): ValidationResult {
       }
     }
   }
+  if (guard >= 10_000) {
+    issues.push({ code: 'fixpoint_guard_exceeded', message: 'Достигнут предел итераций анализа достижимости' });
+  }
 
   // 5. coverage
   for (const node of caseData.nodes) {
-    if (!o.nodes.has(node.id)) issues.push({ code: 'unreachable_node', message: `Узел ${node.id} недостижим` });
+    if (!o.nodes.has(node.id)) {
+      issues.push({ code: 'unreachable_node', message: `Узел ${node.id} недостижим` });
+    } else if (node.requires && !satisfiable(node.requires, o)) {
+      issues.push({ code: 'node_requires_unsatisfiable', message: `Узел ${node.id} открыт, но его условие входа невыполнимо` });
+    }
   }
   for (const c of caseData.contradictions) {
     if (!o.contradictions.has(c.id)) {
