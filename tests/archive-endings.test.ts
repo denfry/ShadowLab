@@ -39,6 +39,12 @@ describe('resolveEnding', () => {
   it('returns cold_case when there is no accusation', () => {
     expect(resolveEnding(sampleArchiveCase, createArchiveProgress(sampleArchiveCase)).id).toBe('end_cold');
   });
+  it('falls back to a synthetic cold_case when no authored ending matches', () => {
+    const noEndings = { ...sampleArchiveCase, endings: [] };
+    const e = resolveEnding(noEndings, createArchiveProgress(noEndings));
+    expect(e.id).toBe('cold_case_default');
+    expect(e.quality).toBe('cold_case');
+  });
 });
 
 describe('scoreCaseArchive', () => {

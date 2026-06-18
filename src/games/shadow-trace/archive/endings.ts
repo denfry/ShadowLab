@@ -38,11 +38,11 @@ function rankFor(score: number): Rank {
 }
 
 /**
- * Deterministic scoring out of 100:
+ * Deterministic scoring out of 100 against an already-resolved ending:
  *   noticed contradictions 40 · decisive lie 30 · seals opened 15 · accusation quality 15
  *   minus 5 per empty suspicion (one in no contradiction), capped at 20.
  */
-export function scoreCaseArchive(caseData: CaseArchive, state: ArchiveProgress): DeductionResultArchive {
+function buildResult(caseData: CaseArchive, state: ArchiveProgress, ending: Ending): DeductionResultArchive {
   const contradictionsTotal = caseData.contradictions.length;
   const contradictionsNoticed = caseData.contradictions.filter((c) => isContradictionNoticed(c, state)).length;
 
@@ -52,9 +52,9 @@ export function scoreCaseArchive(caseData: CaseArchive, state: ArchiveProgress):
     decisive && lie && matchContradiction(caseData, lie[0], lie[1])?.id === decisive.id,
   );
 
-  const sealed = caseData.records.filter((r) => r.seal);
-  const sealsTotal = sealed.length;
-  const sealsOpened = sealed.filter((r) => state.openRecords.includes(r.id)).length;
+  const sealedRecords = caseData.records.filter((r) => r.seal);
+  const sealsTotal = sealedRecords.length;
+  const sealsOpened = sealedRecords.filter((r) => state.openRecords.includes(r.id)).length;
 
   const contradictionRecordIds = new Set<string>();
   for (const c of caseData.contradictions) {
@@ -64,14 +64,13 @@ export function scoreCaseArchive(caseData: CaseArchive, state: ArchiveProgress):
   }
   const emptySuspicions = state.suspicions.filter((s) => !contradictionRecordIds.has(s.recordId)).length;
 
-  const ending = resolveEnding(caseData, state);
   const accusationQuality: EndingQuality = ending.quality;
 
   const noticedScore = contradictionsTotal ? (contradictionsNoticed / contradictionsTotal) * 40 : 40;
   const decisiveScore = decisiveLieCorrect ? 30 : 0;
   const sealScore = sealsTotal ? (sealsOpened / sealsTotal) * 15 : 15;
   const qualityScore = accusationQuality === 'truth' ? 15 : accusationQuality === 'partial' ? 7 : 0;
-  const penalty = Math.min(emptySuspicions * 5, 20);
+  const penalty = Math.min(emptySuspicions * 5, 20); // cap penalty at 20
   const score = Math.max(0, Math.round(noticedScore + decisiveScore + sealScore + qualityScore - penalty));
 
   return {
@@ -88,12 +87,18 @@ export function scoreCaseArchive(caseData: CaseArchive, state: ArchiveProgress):
   };
 }
 
+/** Score the case; resolves the ending internally for the accusation-quality component. */
+export function scoreCaseArchive(caseData: CaseArchive, state: ArchiveProgress): DeductionResultArchive {
+  return buildResult(caseData, state, resolveEnding(caseData, state));
+}
+
 export interface AccusationOutcome {
   ending: Ending;
   result: DeductionResultArchive;
 }
 
-/** Resolve the ending and compute the score together. */
+/** Resolve the ending and compute the score together (ending resolved once). */
 export function checkAccusation(caseData: CaseArchive, state: ArchiveProgress): AccusationOutcome {
-  return { ending: resolveEnding(caseData, state), result: scoreCaseArchive(caseData, state) };
+  const ending = resolveEnding(caseData, state);
+  return { ending, result: buildResult(caseData, state, ending) };
 }
