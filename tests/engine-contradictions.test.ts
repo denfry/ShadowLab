@@ -20,11 +20,16 @@ describe('matchContradiction', () => {
   it('returns null for an unrelated pair', () => {
     expect(matchContradiction(sampleCase, stRef, { type: 'evidence', refId: 'e_log' })).toBeNull();
   });
+
+  it('never matches a self-pair', () => {
+    expect(matchContradiction(sampleCase, stRef, stRef)).toBeNull();
+  });
 });
 
 describe('discoverContradiction', () => {
   it('marks found and applies unlocks (opens n_lab)', () => {
     const p = createCaseProgress(sampleCase);
+    expect(p.openNodes).not.toContain('n_lab');
     const next = discoverContradiction(sampleCase, p, 'c_time');
     expect(next.foundContradictions).toContain('c_time');
     expect(next.openNodes).toContain('n_lab');
@@ -60,5 +65,13 @@ describe('addLink', () => {
     const p = createCaseProgress(sampleCase);
     const next = addLink(sampleCase, p, { fromRef: stRef, toRef: metaRef, relation: 'supports' });
     expect(next.foundContradictions).toEqual([]);
+  });
+
+  it('ignores a duplicate link regardless of order (no double-count)', () => {
+    const p = createCaseProgress(sampleCase);
+    const once = addLink(sampleCase, p, { fromRef: stRef, toRef: metaRef, relation: 'contradicts' });
+    const twice = addLink(sampleCase, once, { fromRef: metaRef, toRef: stRef, relation: 'contradicts' });
+    expect(twice).toBe(once);
+    expect(twice.links).toHaveLength(1);
   });
 });
