@@ -6,3 +6,12 @@ export { matchContradiction, discoverContradiction, addLink } from './contradict
 export { resolveEnding, scoreCaseV2 } from './endings';
 export { validateCase } from './validator';
 export type { ValidationIssue, ValidationResult } from './validator';
+export {
+  getOpenNodes,
+  getAvailableChoices,
+  getVisibleHotspots,
+  getDetectedArtifacts,
+  inspectHotspot,
+  buildDossier,
+} from './selectors';
+export type { OpenNode } from './selectors';
