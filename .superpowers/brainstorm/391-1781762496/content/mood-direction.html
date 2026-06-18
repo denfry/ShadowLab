@@ -1,0 +1,141 @@
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+
+<style>
+  .moodwrap { --disp:"Chakra Petch",system-ui,sans-serif; --mono:"IBM Plex Mono",monospace; --sans:"IBM Plex Sans",system-ui,sans-serif; }
+  .cards { display:grid !important; grid-template-columns:1fr !important; gap:22px !important; }
+  .card { overflow:hidden; }
+  .mk { font-family:var(--sans); position:relative; padding:22px 24px 24px; border-radius:14px; }
+  .mk-top { display:flex; align-items:center; gap:10px; margin-bottom:20px; font-family:var(--mono); font-size:11px; letter-spacing:.18em; }
+  .mk-logo { width:26px; height:26px; border-radius:7px; display:grid; place-items:center; font-family:var(--disp); font-weight:700; font-size:14px; }
+  .mk-chip { margin-left:auto; padding:4px 10px; border-radius:999px; font-size:9.5px; letter-spacing:.16em; text-transform:uppercase; }
+  .mk-hero h1 { font-family:var(--disp); font-weight:700; line-height:1.05; margin:0 0 8px; }
+  .mk-hero p { margin:0; font-size:12.5px; line-height:1.5; max-width:78%; }
+  .mk-btns { display:flex; gap:10px; margin-top:16px; }
+  .mk-btn { font-family:var(--disp); font-weight:600; font-size:11.5px; padding:8px 16px; border-radius:9px; letter-spacing:.03em; }
+  .mk-row { display:flex; gap:14px; margin-top:22px; }
+  .mk-gc { flex:1; border-radius:12px; padding:14px; min-height:96px; display:flex; flex-direction:column; justify-content:space-between; }
+  .mk-gc .gt { font-family:var(--disp); font-weight:600; font-size:13px; }
+  .mk-gc .gm { font-family:var(--mono); font-size:9.5px; letter-spacing:.1em; opacity:.7; }
+  .mk-gc .gtag { font-size:9px; padding:2px 8px; border-radius:999px; align-self:flex-start; letter-spacing:.12em; text-transform:uppercase; }
+  .card-body h3 { font-family:var(--disp); }
+</style>
+
+<div class="moodwrap">
+<h2>Направление №1 — настроение, цвет и глубина</h2>
+<p class="subtitle">Все три варианта остаются неон-киберпанком. Отличаются дисциплиной цвета, глубиной и геометрией. Кликни тот, что ближе (или скажи в терминале — можно «A, но …»).</p>
+
+<div class="cards">
+
+  <!-- A: Restrained / Premium -->
+  <div class="card" data-choice="A · Restrained" onclick="toggleSelect(this)">
+    <div class="card-image" style="padding:0;background:none;">
+      <div class="mk" style="background:radial-gradient(120% 80% at 0% 0%, #0d1422 0%, #070a12 60%); border:1px solid rgba(120,160,255,.10);">
+        <div class="mk-top" style="color:#6f7d99;">
+          <span class="mk-logo" style="background:linear-gradient(135deg,#38e0ff,#1aa6c8);color:#04121a;">S</span>
+          <span style="color:#aab6cf;">SHADOWLAB</span>
+          <span class="mk-chip" style="border:1px solid rgba(120,160,255,.18);color:#7d8aa6;">online · local</span>
+        </div>
+        <div class="mk-hero">
+          <h1 style="font-size:27px;color:#e8edf7;">Запускай миры<br>прямо в браузере</h1>
+          <p style="color:#7d8aa6;">Две игры, один профиль. Прогресс, достижения и сохранения общие для всего портала.</p>
+          <div class="mk-btns">
+            <span class="mk-btn" style="background:#38e0ff;color:#04121a;">Выбрать игру</span>
+            <span class="mk-btn" style="background:transparent;border:1px solid rgba(120,160,255,.20);color:#aab6cf;">О проекте</span>
+          </div>
+        </div>
+        <div class="mk-row">
+          <div class="mk-gc" style="background:rgba(255,255,255,.025);border:1px solid rgba(120,160,255,.10);">
+            <span class="gtag" style="background:rgba(56,224,255,.10);color:#38e0ff;">симуляция</span>
+            <div><div class="gt" style="color:#e8edf7;">Colony Evolution</div><div class="gm" style="color:#7d8aa6;">живая колония</div></div>
+          </div>
+          <div class="mk-gc" style="background:rgba(255,255,255,.025);border:1px solid rgba(120,160,255,.10);">
+            <span class="gtag" style="background:rgba(255,77,148,.10);color:#ff6aa6;">детектив</span>
+            <div><div class="gt" style="color:#e8edf7;">Shadow Trace</div><div class="gm" style="color:#7d8aa6;">раскрой дело</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>A · Restrained / Premium</h3>
+      <p>Один доминирующий акцент (циан), магента — редкий. Глубокий фон, тонкие границы, много воздуха, glow только на фокусе. Спокойно, «дорого», типографика делает работу.</p>
+    </div>
+  </div>
+
+  <!-- B: Cinematic / Atmospheric -->
+  <div class="card" data-choice="B · Cinematic" onclick="toggleSelect(this)">
+    <div class="card-image" style="padding:0;background:none;">
+      <div class="mk" style="background:
+            radial-gradient(60% 60% at 8% 0%, rgba(0,229,255,.20), transparent 60%),
+            radial-gradient(55% 55% at 100% 6%, rgba(255,45,126,.20), transparent 60%),
+            linear-gradient(180deg,#0b1020,#070a16);
+            border:1px solid rgba(0,229,255,.18); box-shadow:inset 0 1px 0 rgba(255,255,255,.05);">
+        <div class="mk-top" style="color:#8a98b8;">
+          <span class="mk-logo" style="background:linear-gradient(135deg,#00e5ff,#ff2d7e);color:#06070f;box-shadow:0 0 18px rgba(0,229,255,.5);">S</span>
+          <span style="color:#cdd6ee;">SHADOWLAB</span>
+          <span class="mk-chip" style="border:1px solid rgba(0,229,255,.25);color:#00e5ff;background:rgba(0,229,255,.06);">online · local</span>
+        </div>
+        <div class="mk-hero">
+          <h1 style="font-size:28px;background:linear-gradient(90deg,#eaf6ff,#00e5ff 60%,#ff8fc4);-webkit-background-clip:text;background-clip:text;color:transparent;text-shadow:0 0 26px rgba(0,229,255,.25);">Запускай миры<br>прямо в браузере</h1>
+          <p style="color:#9aa6c8;">Две игры, один профиль. Прогресс, достижения и сохранения общие для всего портала.</p>
+          <div class="mk-btns">
+            <span class="mk-btn" style="background:linear-gradient(135deg,#00e5ff,#37b6ff);color:#06070f;box-shadow:0 0 22px rgba(0,229,255,.45);">Выбрать игру</span>
+            <span class="mk-btn" style="background:rgba(255,255,255,.04);border:1px solid rgba(0,229,255,.25);color:#cdd6ee;">О проекте</span>
+          </div>
+        </div>
+        <div class="mk-row">
+          <div class="mk-gc" style="background:linear-gradient(180deg,rgba(0,229,255,.08),rgba(10,16,32,.6));border:1px solid rgba(0,229,255,.28);box-shadow:0 0 24px -10px rgba(0,229,255,.6);">
+            <span class="gtag" style="background:rgba(0,229,255,.14);color:#00e5ff;">симуляция</span>
+            <div><div class="gt" style="color:#eaf6ff;">Colony Evolution</div><div class="gm" style="color:#9aa6c8;">живая колония</div></div>
+          </div>
+          <div class="mk-gc" style="background:linear-gradient(180deg,rgba(255,45,126,.08),rgba(10,16,32,.6));border:1px solid rgba(255,45,126,.30);box-shadow:0 0 24px -10px rgba(255,45,126,.6);">
+            <span class="gtag" style="background:rgba(255,45,126,.16);color:#ff5a98;">детектив</span>
+            <div><div class="gt" style="color:#ffeaf3;">Shadow Trace</div><div class="gm" style="color:#c79ab0;">раскрой дело</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>B · Cinematic / Atmospheric</h3>
+      <p>Идём в неон: оба акцента активны, градиентные обводки и заголовки, насыщенные свечения, слоистая глубина. Ощущение AAA-лаунчера/аркады. Живо, драматично.</p>
+    </div>
+  </div>
+
+  <!-- C: Editorial-tech / High-contrast -->
+  <div class="card" data-choice="C · Editorial-tech" onclick="toggleSelect(this)">
+    <div class="card-image" style="padding:0;background:none;">
+      <div class="mk" style="background:#050507; border:1px solid #1c1f2b;">
+        <div class="mk-top" style="color:#6a7080;">
+          <span class="mk-logo" style="background:#00e5ff;color:#05060a;border-radius:4px;">S</span>
+          <span style="color:#e6e9f2;font-weight:700;letter-spacing:.22em;">SHADOWLAB</span>
+          <span class="mk-chip" style="border:1px solid #262a38;color:#7a8194;border-radius:4px;">online · local</span>
+        </div>
+        <div class="mk-hero">
+          <h1 style="font-size:30px;color:#f4f6fb;letter-spacing:-.01em;">ЗАПУСКАЙ МИРЫ<br><span style="color:#00e5ff;">прямо в браузере</span></h1>
+          <p style="color:#878ea0;border-left:2px solid #00e5ff;padding-left:12px;">Две игры, один профиль. Прогресс, достижения и сохранения общие для всего портала.</p>
+          <div class="mk-btns">
+            <span class="mk-btn" style="background:#00e5ff;color:#05060a;border-radius:4px;">Выбрать игру →</span>
+            <span class="mk-btn" style="background:transparent;border:1px solid #2a2f3d;color:#cfd4e0;border-radius:4px;">О проекте</span>
+          </div>
+        </div>
+        <div class="mk-row">
+          <div class="mk-gc" style="background:#0b0c11;border:1px solid #1c1f2b;border-radius:4px;border-top:2px solid #00e5ff;">
+            <span class="gtag" style="background:transparent;border:1px solid #262a38;color:#7a8194;border-radius:3px;">симуляция</span>
+            <div><div class="gt" style="color:#f4f6fb;">Colony Evolution</div><div class="gm" style="color:#878ea0;">живая колония</div></div>
+          </div>
+          <div class="mk-gc" style="background:#0b0c11;border:1px solid #1c1f2b;border-radius:4px;border-top:2px solid #ff2d7e;">
+            <span class="gtag" style="background:transparent;border:1px solid #262a38;color:#7a8194;border-radius:3px;">детектив</span>
+            <div><div class="gt" style="color:#f4f6fb;">Shadow Trace</div><div class="gm" style="color:#878ea0;">раскрой дело</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>C · Editorial-tech / High-contrast</h3>
+      <p>Истинно-чёрный фон, более острая геометрия (меньше скруглений), крупный смелый дисплей-шрифт. Акцент — резкие линии/подчёркивания вместо свечений. Структурно, как «терминал × журнал».</p>
+    </div>
+  </div>
+
+</div>
+</div>

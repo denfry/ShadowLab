@@ -1,0 +1,75 @@
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+
+<style>
+  .hr { --disp:"Chakra Petch",system-ui,sans-serif; --mono:"IBM Plex Mono",monospace; --sans:"IBM Plex Sans",system-ui,sans-serif; }
+  .hr .cards { display:grid !important; grid-template-columns:repeat(3,1fr) !important; gap:18px !important; }
+  @media (max-width:1000px){ .hr .cards { grid-template-columns:1fr !important; } }
+  .hr .card { overflow:visible; background:none !important; border:none !important; padding:0 !important; }
+  .hr .card-body { padding-top:12px; }
+  .hr .card-body h3 { font-family:var(--disp); margin:0 0 4px; }
+
+  .page { border-radius:12px; border:1px solid rgba(0,229,255,.16); background:#080c16; padding:12px; display:flex; flex-direction:column; gap:10px; }
+  .eyebrow { font-family:var(--mono); font-size:8px; letter-spacing:.18em; color:#5f6b85; text-transform:uppercase; margin-bottom:5px; }
+  .sect-t { font-family:var(--disp); font-weight:600; font-size:12px; color:#cdd6ee; }
+  .blk { border-radius:9px; }
+  .brandhero { padding:16px; background:radial-gradient(70% 90% at 6% 0%, rgba(0,229,255,.20), transparent 60%), radial-gradient(60% 80% at 100% 0%, rgba(255,45,126,.16), transparent 60%), linear-gradient(180deg,#0b1020,#080d18); border:1px solid rgba(0,229,255,.16); }
+  .brandhero h1 { font-family:var(--disp); font-weight:700; margin:0; font-size:16px; background:linear-gradient(90deg,#eaf6ff,#00e5ff 70%,#ff8fc4); -webkit-background-clip:text; background-clip:text; color:transparent; }
+  .btn { display:inline-block; font-family:var(--disp); font-weight:600; font-size:9px; padding:5px 11px; border-radius:7px; background:linear-gradient(135deg,#00e5ff,#37b6ff); color:#06070f; margin-top:9px; }
+  .poster { border-radius:9px; position:relative; overflow:hidden; }
+  .poster .t { position:absolute; left:10px; bottom:8px; font-family:var(--disp); font-weight:700; font-size:13px; color:#fbeaf3; }
+  .poster .pt { position:absolute; left:10px; top:9px; font-family:var(--mono); font-size:7.5px; letter-spacing:.12em; text-transform:uppercase; padding:2px 7px; border-radius:999px; }
+  .mini { height:64px; border-radius:8px; border:1px solid rgba(0,229,255,.16); background:linear-gradient(180deg, rgba(0,229,255,.07), rgba(10,14,26,.5)); }
+  .mini.m { border-color:rgba(255,45,126,.2); background:linear-gradient(180deg, rgba(255,45,126,.07), rgba(10,14,26,.5)); }
+  .resume { padding:12px; border-radius:9px; display:flex; align-items:center; gap:10px; background:linear-gradient(90deg, rgba(255,45,126,.12), rgba(10,14,26,.5)); border:1px solid rgba(255,45,126,.25); }
+  .news { display:flex; align-items:center; gap:8px; padding:8px 10px; border-radius:7px; background:rgba(255,255,255,.025); border:1px solid rgba(120,160,255,.10); }
+  .dot { width:24px; height:24px; border-radius:6px; background:linear-gradient(135deg,#a860f7,#ff2d7e); flex:none; }
+</style>
+
+<div class="hr">
+<h2>Ритм главной страницы</h2>
+<p class="subtitle">Сайдбар A уже зафиксирован — показана только контент-зона. Главный вопрос: каким должен быть «первый экран»?</p>
+
+<div class="cards">
+
+  <!-- A: Brand hero + rails (refined current) -->
+  <div class="card" data-choice="A · Brand hero" onclick="toggleSelect(this)">
+    <div class="page">
+      <div class="brandhero blk"><h1>Запускай миры прямо в браузере</h1><div style="font-size:8.5px; color:#8a98b8; margin-top:5px;">Две игры, один профиль.</div><span class="btn">Выбрать игру</span></div>
+      <div><div class="eyebrow">продолжить</div><div class="resume blk"><span class="dot"></span><div style="font-size:9px; color:#e8edf7; font-family:var(--disp);">Shadow Trace</div><span style="margin-left:auto; font-size:8px; color:#ff7ab0;">▶</span></div></div>
+      <div><div class="eyebrow">каталог</div><div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;"><div class="poster" style="height:80px; background:radial-gradient(80% 80% at 20% 0,rgba(0,229,255,.35),transparent),#0a1410;"><span class="pt" style="background:rgba(0,229,255,.18);color:#5fd6e8;">стратегия</span><span class="t">Colony</span></div><div class="poster" style="height:80px; background:radial-gradient(80% 80% at 80% 0,rgba(168,96,247,.4),transparent),#120c1b;"><span class="pt" style="background:rgba(255,45,126,.18);color:#ff7ab0;">детектив</span><span class="t">Shadow Trace</span></div></div></div>
+      <div><div class="eyebrow">журнал</div><div style="display:flex; flex-direction:column; gap:5px;"><div class="news"><span class="dot" style="width:16px;height:16px;"></span><span style="font-size:8px;color:#cdd6ee;">Обновление 0.2</span></div><div class="news"><span class="dot" style="width:16px;height:16px;"></span><span style="font-size:8px;color:#cdd6ee;">Новое дело: галерея</span></div></div></div>
+    </div>
+    <div class="card-body"><h3>A · Брендовый hero + полки</h3><p>Близко к текущему: общий hero-слоган сверху → «продолжить» → каталог → новости. Знакомо, нейтрально, бренд во главе.</p></div>
+  </div>
+
+  <!-- B: Featured game spotlight -->
+  <div class="card" data-choice="B · Spotlight" onclick="toggleSelect(this)">
+    <div class="page">
+      <div class="eyebrow" style="margin:0;">в центре внимания</div>
+      <div class="poster blk" style="height:130px; background:radial-gradient(70% 90% at 80% 10%, rgba(168,96,247,.5), transparent 60%), radial-gradient(70% 80% at 10% 100%, rgba(255,45,126,.4), transparent 55%), linear-gradient(180deg,#140d1d,#0a0710); border:1px solid rgba(255,45,126,.3);">
+        <span class="pt" style="background:rgba(255,45,126,.2);color:#ff7ab0;">детектив · избранное</span>
+        <div style="position:absolute; left:12px; bottom:10px;"><div style="font-family:var(--disp);font-weight:700;font-size:18px;color:#fbeaf3;">Shadow Trace</div><span class="btn" style="background:linear-gradient(135deg,#ff2d7e,#a860f7);">▶ Играть</span></div>
+      </div>
+      <div><div class="eyebrow">все игры</div><div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px;"><div class="mini"></div><div class="mini m"></div><div class="mini"></div></div></div>
+      <div><div class="eyebrow">журнал</div><div style="display:flex; flex-direction:column; gap:5px;"><div class="news"><span class="dot" style="width:16px;height:16px;"></span><span style="font-size:8px;color:#cdd6ee;">Обновление 0.2</span></div></div></div>
+    </div>
+    <div class="card-body"><h3>B · Спотлайт избранной игры</h3><p>Первый экран — большой постер одной игры (можно ротация/«игра недели») с CTA «Играть». Максимально киношно и игро-ориентированно. Бренд уходит в шапку.</p></div>
+  </div>
+
+  <!-- C: Resume-first -->
+  <div class="card" data-choice="C · Resume-first" onclick="toggleSelect(this)">
+    <div class="page">
+      <div class="eyebrow" style="margin:0;">продолжить с того же места</div>
+      <div class="poster blk" style="height:118px; background:radial-gradient(70% 90% at 80% 10%, rgba(168,96,247,.45), transparent 60%), linear-gradient(180deg,#140d1d,#0a0710); border:1px solid rgba(255,45,126,.28); display:flex; align-items:flex-end;">
+        <div style="padding:12px;"><div style="font-family:var(--mono);font-size:7px;letter-spacing:.14em;color:#c79ab8;">ДЕЛО 2 · РАНГ A · 70%</div><div style="font-family:var(--disp);font-weight:700;font-size:16px;color:#fbeaf3;margin-top:3px;">Shadow Trace</div><span class="btn" style="background:linear-gradient(135deg,#ff2d7e,#a860f7);">▶ Продолжить</span></div>
+      </div>
+      <div><div class="eyebrow">открыть новое</div><div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;"><div class="mini m"></div><div class="mini"></div></div></div>
+      <div><div class="eyebrow">журнал</div><div class="news"><span class="dot" style="width:16px;height:16px;"></span><span style="font-size:8px;color:#cdd6ee;">Обновление 0.2</span></div></div>
+    </div>
+    <div class="card-body"><h3>C · Resume-first (персональный)</h3><p>Если есть прогресс — первый экран это крупная карточка «Продолжить» (твоя игра, прогресс, ранг). Для новичка деградирует в спотлайт. App-подобно, «вернись и доиграй».</p></div>
+  </div>
+
+</div>
+</div>

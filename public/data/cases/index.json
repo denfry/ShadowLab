@@ -1,0 +1,14 @@
+[
+  {
+    "id": "missing-researcher",
+    "title": "Пропавший исследователь",
+    "tagline": "Исчезновение после странного сообщения.",
+    "difficulty": "normal"
+  },
+  {
+    "id": "gallery-forgery",
+    "title": "Подделка в галерее",
+    "tagline": "Подлинник исчез, на стене — копия.",
+    "difficulty": "hard"
+  }
+]

@@ -1,0 +1,48 @@
+/* Design tokens. Values are space-separated RGB channels so Tailwind can apply
+   opacity via rgb(var(--x) / <alpha-value>). Themes swap on [data-theme]. */
+
+:root,
+[data-theme='portal'] {
+  --bg: 10 14 26; /* #0a0e1a */
+  --bg-2: 6 9 18;
+  --panel: 18 24 41; /* #121829 */
+  --panel-2: 24 32 54;
+  --edge: 38 50 82;
+  --ink: 226 232 240;
+  --muted: 138 152 178;
+  --accent: 0 229 255; /* cyan */
+  --accent-2: 255 45 126; /* magenta */
+  --good: 52 211 153;
+  --warn: 251 191 36;
+  --bad: 248 113 113;
+}
+
+[data-theme='colony'] {
+  --bg: 13 20 12; /* deep moss */
+  --bg-2: 8 13 8;
+  --panel: 24 33 21;
+  --panel-2: 32 44 28;
+  --edge: 56 74 46;
+  --ink: 233 240 224;
+  --muted: 150 168 132;
+  --accent: 132 222 90; /* living green */
+  --accent-2: 240 168 64; /* amber */
+  --good: 132 222 90;
+  --warn: 240 168 64;
+  --bad: 232 110 90;
+}
+
+[data-theme='shadow'] {
+  --bg: 11 10 14; /* near-black noir */
+  --bg-2: 6 5 8;
+  --panel: 22 19 27;
+  --panel-2: 30 25 38;
+  --edge: 58 48 70;
+  --ink: 232 226 240;
+  --muted: 150 138 168;
+  --accent: 255 58 96; /* crimson */
+  --accent-2: 168 96 247; /* violet */
+  --good: 110 222 160;
+  --warn: 240 188 96;
+  --bad: 255 58 96;
+}
