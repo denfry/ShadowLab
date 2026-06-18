@@ -199,6 +199,8 @@ export function validateCase(caseData: CaseV2): ValidationResult {
   for (const e of caseData.evidence) {
     for (const h of e.media?.hotspots ?? []) effects.push(...(h.grants ?? []));
     for (const a of e.media?.artifacts ?? []) effects.push(...(a.grants ?? []));
+    // TODO(Этап 2): collect e.media.frames[].hotspots[].grants once video evidence ships
+    //   — the reachability fixpoint omits them too; add to both places together.
   }
   for (const e of effects) {
     if (e.addNode && !nodeIds.has(e.addNode)) {

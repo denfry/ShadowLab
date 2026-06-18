@@ -75,7 +75,7 @@ describe('validateCase', () => {
     const broken: CaseV2 = { ...sampleCase, evidence: [...sampleCase.evidence, { ...sampleCase.evidence[0] }] };
     const r = validateCase(broken);
     expect(r.ok).toBe(false);
-    expect(r.issues.some((i) => i.code === 'duplicate_id')).toBe(true);
+    expect(r.issues.some((i) => i.code === 'duplicate_id' && i.message.includes('e_photo'))).toBe(true);
   });
 
   it('flags an effect pointing at a missing target', () => {
