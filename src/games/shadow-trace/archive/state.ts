@@ -1,4 +1,4 @@
-import type { CaseArchive, ArchiveProgress } from './types';
+import type { CaseArchive, ArchiveProgress, ArchiveAccusation } from './types';
 
 const addUnique = (arr: string[], v: string): string[] => (arr.includes(v) ? arr : [...arr, v]);
 const addAllUnique = (arr: string[], vs: string[] | undefined): string[] => {
@@ -43,4 +43,31 @@ export function createArchiveProgress(caseData: CaseArchive): ArchiveProgress {
     notes: [],
   };
   return { ...base, openRecords: recomputeOpen(caseData, base) };
+}
+
+/** Read a reachable, unsealed record: mark seen, discover its entities, grant its keys. */
+export function openRecord(caseData: CaseArchive, state: ArchiveProgress, recordId: string): ArchiveProgress {
+  const rec = caseData.records.find((r) => r.id === recordId);
+  if (!rec) return state;
+  if (!isReachable(caseData, state, recordId)) return state;
+  if (rec.seal && !state.keys.includes(rec.seal.keyId)) return state;
+  const next: ArchiveProgress = {
+    ...state,
+    seenRecords: addUnique(state.seenRecords, recordId),
+    discoveredEntities: addAllUnique(state.discoveredEntities, rec.mentions),
+    keys: addAllUnique(state.keys, rec.grantsKeys),
+  };
+  return { ...next, openRecords: recomputeOpen(caseData, next) };
+}
+
+/** Grant a key from any source (e.g. a media hotspot in the UI); unseals matching records. */
+export function grantKey(caseData: CaseArchive, state: ArchiveProgress, keyId: string): ArchiveProgress {
+  if (state.keys.includes(keyId)) return state;
+  const next: ArchiveProgress = { ...state, keys: [...state.keys, keyId] };
+  return { ...next, openRecords: recomputeOpen(caseData, next) };
+}
+
+/** Record the player's final accusation. */
+export function accuse(state: ArchiveProgress, accusation: ArchiveAccusation): ArchiveProgress {
+  return { ...state, accusation };
 }
