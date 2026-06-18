@@ -95,6 +95,7 @@ export interface Anomaly {
   day: number;
   slot: number;
   severity: number;
+  discoverableBy?: 'sharp' | 'nosy' | 'any'; // trait gate carried from the step's leavesTrace
   discoveredBy?: string;
   plantedAgainst?: string; // framing: discovery attributes suspicion here
 }

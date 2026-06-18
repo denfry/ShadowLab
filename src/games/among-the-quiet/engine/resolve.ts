@@ -68,6 +68,7 @@ export function resolveSlot(station: Station, state: GameState, action: PlayerAc
           day: state.day,
           slot: state.slot,
           severity: sev,
+          discoverableBy: step.leavesTrace?.discoverableBy ?? 'any',
           discoveredBy: detected ? witnessIds[0] : undefined,
         });
         if (detected) {
