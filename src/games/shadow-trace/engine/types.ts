@@ -19,7 +19,7 @@ export interface Effect {
 }
 export type Grant = Effect;
 
-export type FactRef = { type: 'statement' | 'evidence' | 'metadata'; refId: string };
+export type FactRef = { type: 'statement' | 'evidence' | 'metadata' | 'hotspot'; refId: string };
 /** Forward-use: consumed by the dossier `Fact.time` model added in Этап 1 (UI layer). */
 export type TimeSpan = { start?: string; end?: string };
 
@@ -169,7 +169,7 @@ export interface DeductionResultV2 {
  *  doubles as a FactRef the board's addLink consumes. */
 export interface Fact {
   id: string;
-  source: { type: 'evidence' | 'statement' | 'hotspot' | 'metadata'; refId: string };
+  source: FactRef;
   text: string;
   subjectIds: string[];
   time?: TimeSpan;
