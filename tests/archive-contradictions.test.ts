@@ -11,6 +11,8 @@ describe('sameRef', () => {
     expect(sameRef(eronClaim, { kind: 'recordClaim', recordId: 'r_eron', claimId: 'home' })).toBe(true);
     expect(sameRef(eronClaim, { kind: 'recordClaim', recordId: 'r_eron', claimId: 'away' })).toBe(false);
     expect(sameRef(eronClaim, logMeta)).toBe(false);
+    expect(sameRef({ kind: 'record', recordId: 'r_eron' }, { kind: 'record', recordId: 'r_eron' })).toBe(true);
+    expect(sameRef({ kind: 'record', recordId: 'r_eron' }, { kind: 'record', recordId: 'r_report' })).toBe(false);
     expect(sameRef({ kind: 'entity', entityId: 's_eron' }, { kind: 'entity', entityId: 's_eron' })).toBe(true);
   });
 });
