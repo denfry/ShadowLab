@@ -84,4 +84,9 @@ describe('getDetectedArtifacts', () => {
     };
     expect(getDetectedArtifacts(gated, createCaseProgress(sampleCase))).toEqual([]);
   });
+
+  it('returns [] for evidence with no media', () => {
+    const log = sampleCase.evidence.find((e) => e.id === 'e_log')!;
+    expect(getDetectedArtifacts(log, createCaseProgress(sampleCase))).toEqual([]);
+  });
 });
