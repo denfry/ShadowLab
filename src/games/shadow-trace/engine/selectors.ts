@@ -1,6 +1,7 @@
 import type { CaseV2, CaseProgressV2, LeadNode, Choice, Evidence } from './types';
 import type { Hotspot, Artifact } from './media-types';
 import { evaluateCondition } from './conditions';
+import { applyEffects } from './state';
 
 export interface OpenNode {
   node: LeadNode;
@@ -32,4 +33,21 @@ export function getDetectedArtifacts(evidence: Evidence, state: CaseProgressV2):
   return (evidence.media?.artifacts ?? []).filter(
     (a) => !a.detectRequires || evaluateCondition(a.detectRequires, state),
   );
+}
+
+/** Inspect a (visible) hotspot: mark it inspected and route its grants through applyEffects. */
+export function inspectHotspot(caseData: CaseV2, state: CaseProgressV2, hotspotId: string): CaseProgressV2 {
+  if (state.inspectedHotspots.includes(hotspotId)) return state;
+  let hotspot: Hotspot | undefined;
+  for (const e of caseData.evidence) {
+    const found = e.media?.hotspots.find((h) => h.id === hotspotId);
+    if (found) {
+      hotspot = found;
+      break;
+    }
+  }
+  if (!hotspot) return state;
+  if (hotspot.revealRequires && !evaluateCondition(hotspot.revealRequires, state)) return state;
+  const granted = applyEffects(state, hotspot.grants);
+  return { ...granted, inspectedHotspots: [...granted.inspectedHotspots, hotspotId] };
 }
