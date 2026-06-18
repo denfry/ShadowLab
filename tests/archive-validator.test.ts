@@ -47,6 +47,19 @@ describe('validateArchiveCase', () => {
     expect(codes).toEqual(expect.arrayContaining(['duplicate_id', 'no_truth_path']));
   });
 
+  it('flags an ending whose requires can never be satisfied', () => {
+    const c = clone(sampleArchiveCase);
+    c.endings.push({
+      id: 'end_locked',
+      title: 'Заперто',
+      requires: { hasKey: 'k_unreachable' }, // key never granted nor declared
+      quality: 'partial',
+      epilogue: ['—'],
+    });
+    const res = validateArchiveCase(c);
+    expect(res.issues.some((i) => i.code === 'unreachable_ending')).toBe(true);
+  });
+
   it('flags a hotspot out of scene bounds', () => {
     const c = clone(sampleArchiveCase);
     c.media![0].media.hotspots[0].at = { x: 90, y: 90, w: 50, h: 50 };

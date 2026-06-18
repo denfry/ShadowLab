@@ -45,11 +45,13 @@ function satisfiable(cond: ArchiveCondition, o: Obtainable, caseData: CaseArchiv
   return false;
 }
 
+// Collect only POSITIVE-polarity `accuse` targets — those the player could actually
+// assert. We deliberately do NOT descend into `not`: there `accuse x` means the
+// opposite, so x must not be required to be a suspect.
 function collectAccuseTargets(cond: ArchiveCondition, out: Set<string>): void {
   if ('accuse' in cond) out.add(cond.accuse);
   else if ('all' in cond) cond.all.forEach((c) => collectAccuseTargets(c, out));
   else if ('any' in cond) cond.any.forEach((c) => collectAccuseTargets(c, out));
-  else if ('not' in cond) collectAccuseTargets(cond.not, out);
 }
 
 export function validateArchiveCase(caseData: CaseArchive): ValidationResult {
@@ -104,7 +106,9 @@ export function validateArchiveCase(caseData: CaseArchive): ValidationResult {
     }
   }
 
-  // 5. reachability fixpoint
+  // 5. reachability fixpoint. Bootstrap discovered entities/keys from the seed
+  //    records; the seeds themselves enter o.records/o.readable on the loop's
+  //    first pass (seal-aware, exactly like any other record).
   const o: Obtainable = { records: new Set(), readable: new Set(), entities: new Set(), keys: new Set() };
   for (const r of caseData.records) {
     if (!caseData.seedRecordIds.includes(r.id)) continue;
@@ -161,7 +165,8 @@ export function validateArchiveCase(caseData: CaseArchive): ValidationResult {
     if (!o.keys.has(k.id)) issues.push({ code: 'unobtainable_key', message: `Ключ ${k.id} нельзя добыть` });
   }
 
-  // 8. contradiction factrefs reachable
+  // 8. contradiction factrefs reachable (a structurally-missing ref is already
+  //    reported by step 4's bad_factref, so skip it here to avoid a duplicate gripe)
   for (const c of caseData.contradictions) {
     for (const ref of c.between) {
       if (factRefExists(caseData, ref) && !factRefObtainable(ref, o)) {
