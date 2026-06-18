@@ -127,3 +127,12 @@
     scroll-behavior: auto !important;
   }
 }
+
+/* In-app "reduced motion" toggle (Settings) — mirrors the OS media query via a root attribute. */
+:root[data-reduced-motion='true'] *,
+:root[data-reduced-motion='true'] *::before,
+:root[data-reduced-motion='true'] *::after {
+  animation-duration: 0.001ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.001ms !important;
+}

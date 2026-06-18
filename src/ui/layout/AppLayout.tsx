@@ -1,15 +1,22 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useLocation, useOutlet } from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Header } from './Header';
 import { Sidebar } from './Sidebar';
 import { usePageTheme } from '@/ui/hooks/usePageTheme';
+import { useMotionAllowed } from '@/ui/hooks/useMotionAllowed';
 
 export function AppLayout() {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const location = useLocation();
   const outlet = useOutlet();
   usePageTheme('portal');
+
+  // Single source of truth for ambient motion: drives a root attribute that CSS honors.
+  const allowMotion = useMotionAllowed();
+  useEffect(() => {
+    document.documentElement.dataset.reducedMotion = allowMotion ? 'false' : 'true';
+  }, [allowMotion]);
 
   return (
     <div className="min-h-screen">
