@@ -54,6 +54,9 @@ function buildResult(caseData: CaseArchive, state: ArchiveProgress, ending: Endi
 
   const sealedRecords = caseData.records.filter((r) => r.seal);
   const sealsTotal = sealedRecords.length;
+  // "opened" = the seal is broken and the file is now readable (in openRecords),
+  // which in practice requires having read the key-granting record. A1 may switch to
+  // seenRecords if it needs "player actually read it" rather than "now readable".
   const sealsOpened = sealedRecords.filter((r) => state.openRecords.includes(r.id)).length;
 
   const contradictionRecordIds = new Set<string>();
