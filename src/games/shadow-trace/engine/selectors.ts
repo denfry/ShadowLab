@@ -99,12 +99,15 @@ export function buildDossier(caseData: CaseV2, state: CaseProgressV2): Fact[] {
       source: { type: 'statement', refId: st.id },
       text: `${speakerName(caseData, st.speakerId)}: «${st.claim}»`,
       subjectIds: [st.asserts.subjectId],
-      time: st.asserts.timeStart ? { start: st.asserts.timeStart, end: st.asserts.timeEnd } : undefined,
+      time: st.asserts.timeStart
+        ? { start: st.asserts.timeStart, ...(st.asserts.timeEnd ? { end: st.asserts.timeEnd } : {}) }
+        : undefined,
       place: st.asserts.place,
     });
   }
 
   for (const e of caseData.evidence) {
+    if (!state.discoveredEvidence.includes(e.id)) continue;
     for (const h of e.media?.hotspots ?? []) {
       if (!state.inspectedHotspots.includes(h.id)) continue;
       facts.push({

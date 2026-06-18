@@ -167,9 +167,28 @@ describe('buildDossier', () => {
     expect(sources).toContain('metadata:e_photo'); // e_photo has metadata.time
     expect(sources).toContain('statement:st_eron_home');
     expect(sources).toContain('hotspot:h_clock');
+    expect(sources).not.toContain('evidence:e_log'); // e_log undiscovered (n_lab not visited)
 
     // The statement fact carries the alibi time span (used by the board to spot contradictions).
     const stFact = facts.find((f) => f.source.refId === 'st_eron_home')!;
     expect(stFact.time).toEqual({ start: '22:00', end: '23:00' });
+  });
+
+  it('builds a start-only time span when the statement has no end time', () => {
+    const cd: CaseV2 = {
+      ...sampleCase,
+      statements: sampleCase.statements.map((s) => ({ ...s, asserts: { ...s.asserts, timeEnd: undefined } })),
+    };
+    let p = createCaseProgress(cd);
+    p = visitNode(cd, p, 'n_interview');
+    const stFact = buildDossier(cd, p).find((f) => f.source.refId === 'st_eron_home')!;
+    expect(stFact.time).toStrictEqual({ start: '22:00' });
+  });
+
+  it('does not list a hotspot fact when its parent evidence is undiscovered', () => {
+    let p = createCaseProgress(sampleCase);
+    p = inspectHotspot(sampleCase, p, 'h_clock'); // e_photo NOT discovered (n_scene not visited)
+    const sources = buildDossier(sampleCase, p).map((f) => `${f.source.type}:${f.source.refId}`);
+    expect(sources).not.toContain('hotspot:h_clock');
   });
 });
