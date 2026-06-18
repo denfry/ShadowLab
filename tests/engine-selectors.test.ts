@@ -125,4 +125,26 @@ describe('inspectHotspot', () => {
     const p = createCaseProgress(cd);
     expect(inspectHotspot(cd, p, 'nope')).toBe(p);
   });
+
+  it('is a no-op for a hidden hotspot whose revealRequires is unmet', () => {
+    const photo = sampleCase.evidence.find((e) => e.id === 'e_photo')!;
+    const cd: CaseV2 = {
+      ...sampleCase,
+      evidence: sampleCase.evidence.map((e) =>
+        e.id === 'e_photo'
+          ? {
+              ...e,
+              media: {
+                ...photo.media!,
+                hotspots: [{ ...photo.media!.hotspots[0], revealRequires: { hasFlag: 'never' }, grants: [{ setFlag: 'should_not_set' }] }],
+              },
+            }
+          : e,
+      ),
+    };
+    const p = createCaseProgress(cd);
+    const next = inspectHotspot(cd, p, 'h_clock');
+    expect(next).toBe(p);
+    expect(next.flags.should_not_set).toBeUndefined();
+  });
 });

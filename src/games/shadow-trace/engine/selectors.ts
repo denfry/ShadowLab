@@ -35,7 +35,8 @@ export function getDetectedArtifacts(evidence: Evidence, state: CaseProgressV2):
   );
 }
 
-/** Inspect a (visible) hotspot: mark it inspected and route its grants through applyEffects. */
+/** Inspect a (visible) hotspot: mark it inspected and route its grants through applyEffects.
+ *  Hotspot ids are assumed unique across all evidence; the first match wins. */
 export function inspectHotspot(caseData: CaseV2, state: CaseProgressV2, hotspotId: string): CaseProgressV2 {
   if (state.inspectedHotspots.includes(hotspotId)) return state;
   let hotspot: Hotspot | undefined;
