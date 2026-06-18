@@ -6,11 +6,12 @@ import { GameRegistry } from '@/services/games/GameRegistry';
 import { Avatar } from '@/ui/profile/ProfileWidget';
 import { Button } from '@/ui/primitives/Button';
 import { SectionTitle } from '@/ui/primitives/SectionTitle';
+import { Tag } from '@/ui/primitives/Tag';
 import { AchievementBadge } from '@/ui/profile/AchievementBadge';
 
 function Stat({ label, value }: { label: string; value: string }) {
   return (
-    <div className="panel-inset p-4">
+    <div className="panel-inset p-4 shadow-e1">
       <p className="font-display text-2xl text-ink">{value}</p>
       <p className="label-mono mt-1">{label}</p>
     </div>
@@ -35,7 +36,7 @@ export function ProfilePage() {
 
   return (
     <div className="space-y-12">
-      <section className="panel flex flex-col gap-5 p-6 sm:flex-row sm:items-center">
+      <section className="panel-glass flex flex-col gap-5 p-6 sm:flex-row sm:items-center">
         <Avatar name={profile.displayName} size={72} />
         <div className="flex-1">
           {editing ? (
@@ -70,8 +71,10 @@ export function ProfilePage() {
           <p className="mt-1 font-mono text-xs text-muted">
             id {profile.id} · с {profile.createdAt.slice(0, 10)}
           </p>
-          <p className="mt-2 chip">
-            {profile.cloudLinked ? 'облако подключено' : 'локальный профиль · облако в v1.0'}
+          <p className="mt-2">
+            <Tag tone={profile.cloudLinked ? 'good' : 'muted'}>
+              {profile.cloudLinked ? 'облако подключено' : 'локальный профиль · облако в v1.0'}
+            </Tag>
           </p>
         </div>
       </section>
