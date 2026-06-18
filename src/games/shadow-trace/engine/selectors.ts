@@ -1,4 +1,4 @@
-import type { CaseV2, CaseProgressV2, LeadNode, Choice, Evidence } from './types';
+import type { CaseV2, CaseProgressV2, LeadNode, Choice, Evidence, Fact } from './types';
 import type { Hotspot, Artifact } from './media-types';
 import { evaluateCondition } from './conditions';
 import { applyEffects } from './state';
@@ -51,4 +51,70 @@ export function inspectHotspot(caseData: CaseV2, state: CaseProgressV2, hotspotI
   if (hotspot.revealRequires && !evaluateCondition(hotspot.revealRequires, state)) return state;
   const granted = applyEffects(state, hotspot.grants);
   return { ...granted, inspectedHotspots: [...granted.inspectedHotspots, hotspotId] };
+}
+
+function metadataText(e: Evidence): string {
+  const m = e.metadata ?? {};
+  const parts: string[] = [];
+  if (m.time) parts.push(`время ${m.time}`);
+  if (m.geo) parts.push(`место ${m.geo}`);
+  if (m.device) parts.push(m.device);
+  return `Метаданные «${e.title}»: ${parts.join(', ')}`;
+}
+
+function speakerName(caseData: CaseV2, speakerId: string): string {
+  return caseData.suspects.find((s) => s.id === speakerId)?.name ?? speakerId;
+}
+
+/** Derive the dossier: a Fact card per discovered evidence, its metadata, each
+ *  discovered statement, and each inspected hotspot. Each fact's `source` is the
+ *  FactRef the board's addLink consumes. */
+export function buildDossier(caseData: CaseV2, state: CaseProgressV2): Fact[] {
+  const facts: Fact[] = [];
+
+  for (const e of caseData.evidence) {
+    if (!state.discoveredEvidence.includes(e.id)) continue;
+    facts.push({
+      id: `f_ev_${e.id}`,
+      source: { type: 'evidence', refId: e.id },
+      text: e.summary,
+      subjectIds: e.relatedSuspectIds,
+    });
+    if (e.metadata && (e.metadata.time || e.metadata.geo || e.metadata.device)) {
+      facts.push({
+        id: `f_meta_${e.id}`,
+        source: { type: 'metadata', refId: e.id },
+        text: metadataText(e),
+        subjectIds: e.relatedSuspectIds,
+        time: e.metadata.time ? { start: e.metadata.time } : undefined,
+        place: e.metadata.geo,
+      });
+    }
+  }
+
+  for (const st of caseData.statements) {
+    if (!state.discoveredStatements.includes(st.id)) continue;
+    facts.push({
+      id: `f_st_${st.id}`,
+      source: { type: 'statement', refId: st.id },
+      text: `${speakerName(caseData, st.speakerId)}: «${st.claim}»`,
+      subjectIds: [st.asserts.subjectId],
+      time: st.asserts.timeStart ? { start: st.asserts.timeStart, end: st.asserts.timeEnd } : undefined,
+      place: st.asserts.place,
+    });
+  }
+
+  for (const e of caseData.evidence) {
+    for (const h of e.media?.hotspots ?? []) {
+      if (!state.inspectedHotspots.includes(h.id)) continue;
+      facts.push({
+        id: `f_hs_${h.id}`,
+        source: { type: 'hotspot', refId: h.id },
+        text: h.label,
+        subjectIds: e.relatedSuspectIds,
+      });
+    }
+  }
+
+  return facts;
 }

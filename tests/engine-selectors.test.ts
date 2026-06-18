@@ -5,8 +5,9 @@ import {
   getVisibleHotspots,
   getDetectedArtifacts,
   inspectHotspot,
+  buildDossier,
 } from '@/games/shadow-trace/engine/selectors';
-import { createCaseProgress } from '@/games/shadow-trace/engine/state';
+import { createCaseProgress, visitNode } from '@/games/shadow-trace/engine/state';
 import { sampleCase } from './fixtures/sample-case-v2';
 import type { CaseProgressV2, LeadNode } from '@/games/shadow-trace/engine/types';
 import type { CaseV2 } from '@/games/shadow-trace/engine/types';
@@ -146,5 +147,29 @@ describe('inspectHotspot', () => {
     const next = inspectHotspot(cd, p, 'h_clock');
     expect(next).toBe(p);
     expect(next.flags.should_not_set).toBeUndefined();
+  });
+});
+
+describe('buildDossier', () => {
+  it('is empty for a fresh case', () => {
+    expect(buildDossier(sampleCase, createCaseProgress(sampleCase))).toEqual([]);
+  });
+
+  it('derives evidence, metadata, statement and inspected-hotspot facts', () => {
+    let p = createCaseProgress(sampleCase);
+    p = visitNode(sampleCase, p, 'n_scene'); // grants e_photo (has metadata)
+    p = visitNode(sampleCase, p, 'n_interview'); // grants st_eron_home
+    p = inspectHotspot(sampleCase, p, 'h_clock');
+
+    const facts = buildDossier(sampleCase, p);
+    const sources = facts.map((f) => `${f.source.type}:${f.source.refId}`);
+    expect(sources).toContain('evidence:e_photo');
+    expect(sources).toContain('metadata:e_photo'); // e_photo has metadata.time
+    expect(sources).toContain('statement:st_eron_home');
+    expect(sources).toContain('hotspot:h_clock');
+
+    // The statement fact carries the alibi time span (used by the board to spot contradictions).
+    const stFact = facts.find((f) => f.source.refId === 'st_eron_home')!;
+    expect(stFact.time).toEqual({ start: '22:00', end: '23:00' });
   });
 });
