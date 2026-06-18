@@ -25,10 +25,9 @@ function inProgressStats(input: GameCardInput): CardStat[] {
     const wins = records['colony.victories'];
     if (day != null && day !== '' && day !== 0) stats.push({ icon: '⌬', label: `день ${day}`, tone: 'accent' });
     if (typeof wins === 'number' && wins > 0) stats.push({ icon: '⚑', label: `${wins} побед`, tone: 'warn' });
-  } else {
-    const rank = records['shadow.bestRank'];
-    if (lastSave?.label) stats.push({ icon: '◷', label: lastSave.label, tone: 'accent' });
-    if (rank != null && rank !== '') stats.push({ icon: '★', label: `ранг ${rank}`, tone: 'good' });
+  } else if (lastSave?.label) {
+    // Shadow Trace has no numeric "record" to surface — the save label (e.g. "Дело 2") is the live stat.
+    stats.push({ icon: '◷', label: lastSave.label, tone: 'accent' });
   }
   if (stats.length === 0 && lastSave?.label) stats.push({ icon: '◷', label: lastSave.label, tone: 'accent' });
   if (stats.length === 0) stats.push({ icon: '▸', label: 'в процессе', tone: 'muted' });
