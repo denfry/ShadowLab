@@ -39,5 +39,6 @@ describe('evaluateArchiveCondition', () => {
     ).toBe(true);
     expect(evaluateArchiveCondition({ not: { accuse: 's_mara' } }, sampleArchiveCase, p)).toBe(true);
     expect(evaluateArchiveCondition({ all: [] }, sampleArchiveCase, p)).toBe(true);
+    expect(evaluateArchiveCondition({ any: [] }, sampleArchiveCase, p)).toBe(false);
   });
 });
