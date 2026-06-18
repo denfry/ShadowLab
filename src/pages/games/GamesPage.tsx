@@ -19,6 +19,7 @@ export function GamesPage() {
           <button
             key={gname}
             onClick={() => setGenre(gname)}
+            aria-pressed={genre === gname}
             className={cx(
               'rounded-xl border px-4 py-2 font-display text-sm capitalize tracking-wide transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/60',
               genre === gname

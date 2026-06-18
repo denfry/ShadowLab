@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useLocation, useOutlet } from 'react-router-dom';
-import { AnimatePresence, motion } from 'framer-motion';
+import { AnimatePresence, MotionConfig, motion } from 'framer-motion';
 import { Header } from './Header';
 import { Sidebar } from './Sidebar';
 import { usePageTheme } from '@/ui/hooks/usePageTheme';
@@ -19,6 +19,7 @@ export function AppLayout() {
   }, [allowMotion]);
 
   return (
+    <MotionConfig reducedMotion={allowMotion ? 'never' : 'always'}>
     <div className="min-h-screen">
       <Header onMenu={() => setDrawerOpen(true)} />
 
@@ -70,5 +71,6 @@ export function AppLayout() {
         </main>
       </div>
     </div>
+    </MotionConfig>
   );
 }

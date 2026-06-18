@@ -50,6 +50,7 @@ export function AchievementsPage() {
           <button
             key={t.key}
             onClick={() => setTab(t.key)}
+            aria-pressed={tab === t.key}
             className={cx(
               'rounded-lg px-4 py-1.5 font-display text-sm tracking-wide transition-all',
               'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/60',

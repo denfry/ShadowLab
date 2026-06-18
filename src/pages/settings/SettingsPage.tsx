@@ -109,6 +109,7 @@ export function SettingsPage() {
               <button
                 key={q}
                 onClick={() => s.set('graphics', { ...s.graphics, quality: q })}
+                aria-pressed={s.graphics.quality === q}
                 className={cx(
                   'rounded-lg px-3 py-1.5 font-mono text-xs uppercase transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/60',
                   s.graphics.quality === q ? 'bg-accent/15 text-accent' : 'text-muted hover:text-ink',
@@ -135,6 +136,7 @@ export function SettingsPage() {
               <button
                 key={l}
                 onClick={() => s.set('language', l)}
+                aria-pressed={s.language === l}
                 className={cx(
                   'rounded-lg px-3 py-1.5 font-mono text-xs uppercase transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/60',
                   s.language === l ? 'bg-accent/15 text-accent' : 'text-muted hover:text-ink',
