@@ -20,6 +20,7 @@ export interface Effect {
 export type Grant = Effect;
 
 export type FactRef = { type: 'statement' | 'evidence' | 'metadata'; refId: string };
+/** Forward-use: consumed by the dossier `Fact.time` model added in Этап 1 (UI layer). */
 export type TimeSpan = { start?: string; end?: string };
 
 // ---- authored case content ----
@@ -54,11 +55,20 @@ export interface Evidence {
   revealsStatementIds?: string[];
 }
 
+/** Machine-readable form of a statement's claim, used by later contradiction tooling. */
+export interface StatementAssert {
+  subjectId: string;
+  place?: string;
+  timeStart?: string;
+  timeEnd?: string;
+  action?: string;
+}
+
 export interface Statement {
   id: string;
   speakerId: string;
   claim: string;
-  asserts: { subjectId: string; place?: string; timeStart?: string; timeEnd?: string; action?: string };
+  asserts: StatementAssert;
 }
 
 export interface Contradiction {
