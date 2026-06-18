@@ -32,7 +32,7 @@ export function ProfileWidget({ compact }: ProfileWidgetProps) {
     <Link
       to="/profile"
       className={cx(
-        'group flex items-center gap-3 rounded-xl border border-edge/60 bg-panel/50 px-2.5 py-2 transition-all hover:border-accent/40 hover:bg-panel',
+        'group flex items-center gap-3 rounded-xl border border-edge/60 bg-panel/50 px-2.5 py-2 transition-all hover:border-accent/40 hover:bg-panel focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/60',
         compact ? '' : 'w-full',
       )}
     >
