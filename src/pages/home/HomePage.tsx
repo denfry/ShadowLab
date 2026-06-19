@@ -6,6 +6,8 @@ import { NewsService, type NewsPost } from '@/services/news/NewsService';
 import { pickContinue, type ContinueEntry } from '@/pages/home/continueModel';
 import { GameCard } from '@/ui/game/GameCard';
 import { ContinueHero } from '@/ui/home/ContinueHero';
+import { ProgressSummary } from '@/ui/home/ProgressSummary';
+import { AchievementsShowcase } from '@/ui/home/AchievementsShowcase';
 import { SectionTitle } from '@/ui/primitives/SectionTitle';
 import { Skeleton } from '@/ui/feedback/Skeleton';
 
@@ -27,6 +29,11 @@ export function HomePage() {
       <ContinueHero entry={cont} fallbackGame={fallback} />
 
       <section>
+        <SectionTitle eyebrow="профиль" title="Ваш прогресс" />
+        <ProgressSummary />
+      </section>
+
+      <section>
         <SectionTitle
           eyebrow={cont ? 'открыть новое' : 'каталог'}
           title="Игры"
@@ -41,6 +48,19 @@ export function HomePage() {
             <GameCard key={def.id} def={def} index={i} />
           ))}
         </div>
+      </section>
+
+      <section>
+        <SectionTitle
+          eyebrow="награды"
+          title="Достижения"
+          action={
+            <Link to="/achievements" className="font-display text-sm text-accent hover:underline">
+              Все достижения →
+            </Link>
+          }
+        />
+        <AchievementsShowcase />
       </section>
 
       <section>
