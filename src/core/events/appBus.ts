@@ -12,6 +12,7 @@ export interface AppEvents extends Record<string, unknown> {
   toast: ToastPayload;
   'achievement:unlocked': { id: string; title: string };
   'save:written': { gameId: string; slot: number };
+  'auth:change': { userId: string | null };
   'theme:change': string;
 }
 
