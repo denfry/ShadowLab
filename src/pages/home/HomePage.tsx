@@ -6,6 +6,7 @@ import { NewsService, type NewsPost } from '@/services/news/NewsService';
 import { pickContinue, type ContinueEntry } from '@/pages/home/continueModel';
 import { GameCard } from '@/ui/game/GameCard';
 import { ContinueHero } from '@/ui/home/ContinueHero';
+import { AccountPanel } from '@/ui/home/AccountPanel';
 import { ProgressSummary } from '@/ui/home/ProgressSummary';
 import { AchievementsShowcase } from '@/ui/home/AchievementsShowcase';
 import { SectionTitle } from '@/ui/primitives/SectionTitle';
@@ -27,6 +28,8 @@ export function HomePage() {
   return (
     <div className="space-y-14">
       <ContinueHero entry={cont} fallbackGame={fallback} />
+
+      <AccountPanel />
 
       <section>
         <SectionTitle eyebrow="профиль" title="Ваш прогресс" />
