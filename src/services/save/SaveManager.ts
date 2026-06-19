@@ -44,6 +44,7 @@ class SaveManagerImpl {
 
   private async persist(): Promise<void> {
     await this.adapter.set(ROOT_KEY, this.file);
+    appBus.emit('save:dirty', undefined);
   }
 
   getFile(): SaveFile {
@@ -174,6 +175,11 @@ class SaveManagerImpl {
   // ---- export / import -----------------------------------------------------
   exportAll(): SaveFile {
     return { ...structuredCloneSafe(this.file), exportedAt: nowIso() };
+  }
+
+  /** Snapshot the current file into the backup slot (e.g. before a destructive cloud overwrite). */
+  async backupNow(): Promise<void> {
+    await this.adapter.set(BACKUP_KEY, this.file);
   }
 
   async importAll(raw: unknown): Promise<SaveFile> {
