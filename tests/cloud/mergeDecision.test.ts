@@ -41,4 +41,12 @@ describe('decideSync', () => {
     b.records['colony.bestDay'] = 99;
     expect(decideSync(a, { data: b })).toBe('conflict');
   });
+  it('treats key-order differences as equal (no spurious conflict)', () => {
+    const a = meaningful();
+    a.records = { 'colony.bestDay': 5, 'shadow.bestScore': 9 };
+    // b is a deep clone of a with keys inserted in a different order
+    const b: SaveFile = JSON.parse(JSON.stringify(a));
+    b.records = { 'shadow.bestScore': 9, 'colony.bestDay': 5 }; // same data, different order
+    expect(decideSync(a, { data: b })).toBe('noop');
+  });
 });

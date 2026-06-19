@@ -39,6 +39,7 @@ class CloudSyncImpl {
   }
 
   private startListening(): void {
+    this.suppressDirty = false;
     this.unsubDirty?.();
     this.unsubDirty = appBus.on('save:dirty', () => {
       if (this.suppressDirty) {
@@ -114,7 +115,10 @@ class CloudSyncImpl {
     if (!c) return;
     useSyncStore.getState().setConflict(null);
     useSyncStore.getState().setPhase('syncing');
-    if (choice === 'cloud') await this.applyCloud(c.cloud);
+    if (choice === 'cloud') {
+      await SaveManager.backupNow();
+      await this.applyCloud(c.cloud);
+    }
     await this.push();
     this.startListening();
   }

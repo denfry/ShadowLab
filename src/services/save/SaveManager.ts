@@ -177,6 +177,11 @@ class SaveManagerImpl {
     return { ...structuredCloneSafe(this.file), exportedAt: nowIso() };
   }
 
+  /** Snapshot the current file into the backup slot (e.g. before a destructive cloud overwrite). */
+  async backupNow(): Promise<void> {
+    await this.adapter.set(BACKUP_KEY, this.file);
+  }
+
   async importAll(raw: unknown): Promise<SaveFile> {
     const migrated = migrateSaveFile(raw);
     this.file = migrated;
