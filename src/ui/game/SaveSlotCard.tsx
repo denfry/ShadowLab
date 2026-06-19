@@ -17,8 +17,8 @@ export function SaveSlotCard({ slot, save, onLoad, onDelete }: SaveSlotCardProps
   return (
     <div
       className={cx(
-        'panel flex items-center gap-4 p-4',
-        empty ? 'border-dashed opacity-80' : 'border-edge/70',
+        'panel flex items-center gap-4 p-4 shadow-e1 transition-all',
+        empty ? 'border-dashed opacity-70' : 'border-edge/70 hover:border-accent/40',
       )}
     >
       <div className="grid h-12 w-12 shrink-0 place-items-center rounded-xl bg-bg-2 font-mono text-sm text-muted">
@@ -44,7 +44,7 @@ export function SaveSlotCard({ slot, save, onLoad, onDelete }: SaveSlotCardProps
             Продолжить
           </Button>
           {onDelete && (
-            <Button size="sm" variant="subtle" onClick={onDelete} aria-label="Удалить">
+            <Button size="sm" variant="danger" onClick={onDelete} aria-label="Удалить">
               ✕
             </Button>
           )}

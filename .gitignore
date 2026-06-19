@@ -8,3 +8,4 @@ dist-ssr
 !.env.example
 .vite
 coverage
+.superpowers/

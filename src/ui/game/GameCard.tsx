@@ -1,22 +1,34 @@
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import type { GameDefinition } from '@/types/game-module';
-import { IconPlay } from '@/ui/icons';
+import { SaveManager } from '@/services/save/SaveManager';
+import { buildGameCardModel } from '@/ui/game/gameCardModel';
+import { StatChip } from '@/ui/primitives/StatChip';
+import { Tag } from '@/ui/primitives/Tag';
 
 interface GameCardProps {
   def: GameDefinition;
   index?: number;
 }
 
-const motifByTheme: Record<GameDefinition['theme'], string> = {
+// Procedural poster art per theme. --accent / --accent-2 resolve under data-theme.
+const coverByTheme: Record<GameDefinition['theme'], string> = {
   colony:
-    'radial-gradient(120% 120% at 20% 0%, rgb(var(--accent)/0.35), transparent 55%), repeating-linear-gradient(135deg, rgb(var(--accent)/0.10) 0 10px, transparent 10px 20px)',
+    'radial-gradient(85% 70% at 22% 8%, rgb(var(--accent)/0.40), transparent 58%), repeating-linear-gradient(135deg, rgb(var(--accent)/0.10) 0 9px, transparent 9px 20px), linear-gradient(180deg, rgb(var(--bg)), rgb(var(--bg-2)))',
   shadow:
-    'radial-gradient(120% 120% at 80% 0%, rgb(var(--accent)/0.32), transparent 55%), repeating-linear-gradient(90deg, rgb(var(--accent-2)/0.10) 0 2px, transparent 2px 8px)',
+    'radial-gradient(90% 70% at 78% 12%, rgb(var(--accent-2)/0.42), transparent 60%), radial-gradient(80% 70% at 18% 95%, rgb(var(--accent-2)/0.30), transparent 55%), linear-gradient(180deg, rgb(var(--bg)), rgb(var(--bg-2)))',
 };
 
 export function GameCard({ def, index = 0 }: GameCardProps) {
-  const soon = def.status === 'soon';
+  const lastSave = SaveManager.lastPlayed(def.id);
+  // Only colony exposes numeric records; shadow surfaces its save label (see gameCardModel).
+  const records = {
+    'colony.bestDay': SaveManager.getRecord('colony.bestDay'),
+    'colony.victories': SaveManager.getRecord('colony.victories'),
+  };
+  const m = buildGameCardModel({ def, lastSave, records });
+  const cta = m.state === 'in-progress' ? `▶ ${m.ctaLabel}` : `${m.ctaLabel} →`;
+  const themeTone = def.theme === 'colony' ? 'good' : 'accent2';
 
   return (
     <motion.div
@@ -27,42 +39,40 @@ export function GameCard({ def, index = 0 }: GameCardProps) {
     >
       <Link
         to={`/games/${def.id}`}
-        className="group block overflow-hidden rounded-2xl border border-edge/70 bg-panel/60 transition-all duration-300 hover:-translate-y-1.5 hover:border-accent/50 hover:shadow-glow"
+        className="group block overflow-hidden rounded-2xl border border-edge/70 bg-panel/40 shadow-e1 transition-all duration-300 hover:-translate-y-1.5 hover:border-accent/50 hover:shadow-e2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/60"
       >
-        {/* Cover */}
-        <div className="scanlines relative h-44 overflow-hidden">
-          <div className="absolute inset-0" style={{ background: motifByTheme[def.theme] }} />
-          <div className="absolute inset-0 bg-gradient-to-t from-panel via-panel/30 to-transparent" />
-          <span className="absolute left-4 top-4 chip">{def.theme === 'colony' ? 'STRATEGY' : 'DETECTIVE'}</span>
-          {soon && <span className="absolute right-4 top-4 chip border-warn/50 text-warn">SOON</span>}
+        {/* Poster */}
+        <div className="scanlines relative h-60 overflow-hidden">
+          <div
+            className="absolute inset-0 transition-transform duration-500 group-hover:scale-[1.04]"
+            style={{ background: coverByTheme[def.theme] }}
+          />
           <span
-            className="absolute bottom-3 right-4 font-display text-6xl font-bold text-ink/10 transition-transform duration-500 group-hover:scale-110"
             aria-hidden
+            className="absolute -bottom-4 right-2 font-display text-[7rem] font-bold leading-none text-ink/[0.06] transition-transform duration-500 group-hover:scale-110"
           >
-            {def.theme === 'colony' ? '◣' : '◈'}
+            {m.emblem}
           </span>
+          <span className="absolute left-4 top-4">
+            <Tag tone={themeTone}>{m.genre}</Tag>
+          </span>
+          {/* bottom scrim with title + stats */}
+          <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-bg via-bg/70 to-transparent p-4 pt-10">
+            <h3 className="font-display text-2xl font-bold tracking-wide text-ink neon-text">{m.title}</h3>
+            <p className="mt-0.5 text-sm text-muted">{m.tagline}</p>
+            <div className="mt-3 flex flex-wrap gap-1.5">
+              {m.stats.map((s) => (
+                <StatChip key={s.label} icon={s.icon} label={s.label} tone={s.tone === 'accent' ? themeTone : s.tone} />
+              ))}
+            </div>
+          </div>
         </div>
-
-        {/* Body */}
-        <div className="p-5">
-          <h3 className="font-display text-xl font-semibold tracking-wide text-ink neon-text">
-            {def.title}
-          </h3>
-          <p className="mt-1 text-sm text-muted">{def.tagline}</p>
-          <div className="mt-3 flex flex-wrap gap-1.5">
-            {def.tags.slice(0, 3).map((t) => (
-              <span key={t} className="rounded-md bg-bg-2 px-2 py-0.5 font-mono text-[0.65rem] text-muted">
-                {t}
-              </span>
-            ))}
-          </div>
-          <div className="mt-4 flex items-center gap-2 font-display text-sm text-accent">
-            <IconPlay width={16} height={16} />
-            <span className="tracking-wide">{soon ? 'Скоро' : 'Открыть'}</span>
-            <span className="ml-auto translate-x-0 text-muted transition-transform group-hover:translate-x-1">
-              →
-            </span>
-          </div>
+        {/* Footer */}
+        <div className="flex items-center gap-2 border-t border-edge/50 px-4 py-3">
+          <span className="font-mono text-[0.7rem] tracking-wide text-muted">{m.metaTags.join(' · ')}</span>
+          <span className="ml-auto font-display text-sm font-semibold tracking-wide text-accent transition-transform group-hover:translate-x-0.5">
+            {cta}
+          </span>
         </div>
       </Link>
     </motion.div>

@@ -35,14 +35,14 @@ function Toggle({ on, onClick }: { on: boolean; onClick: () => void }) {
     <button
       onClick={onClick}
       className={cx(
-        'relative h-6 w-11 rounded-full border transition-colors',
+        'relative h-6 w-11 rounded-full border transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/60',
         on ? 'border-accent/60 bg-accent/30' : 'border-edge/70 bg-bg-2',
       )}
     >
       <span
         className={cx(
           'absolute top-0.5 h-4 w-4 rounded-full bg-ink transition-transform',
-          on ? 'translate-x-6' : 'translate-x-0.5',
+          on ? 'translate-x-6 shadow-glow' : 'translate-x-0.5',
         )}
       />
     </button>
@@ -104,13 +104,14 @@ export function SettingsPage() {
       <section className="panel p-5">
         <p className="label-mono mb-2">Графика</p>
         <Row label="Качество">
-          <div className="flex gap-1">
+          <div className="inline-flex gap-1 rounded-lg border border-edge/60 bg-panel/40 p-1">
             {(['low', 'med', 'high'] as const).map((q) => (
               <button
                 key={q}
                 onClick={() => s.set('graphics', { ...s.graphics, quality: q })}
+                aria-pressed={s.graphics.quality === q}
                 className={cx(
-                  'rounded-lg px-3 py-1.5 font-mono text-xs uppercase',
+                  'rounded-lg px-3 py-1.5 font-mono text-xs uppercase transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/60',
                   s.graphics.quality === q ? 'bg-accent/15 text-accent' : 'text-muted hover:text-ink',
                 )}
               >
@@ -130,13 +131,14 @@ export function SettingsPage() {
       <section className="panel p-5">
         <p className="label-mono mb-2">Язык</p>
         <Row label="Язык интерфейса">
-          <div className="flex gap-1">
+          <div className="inline-flex gap-1 rounded-lg border border-edge/60 bg-panel/40 p-1">
             {(['ru', 'en'] as const).map((l) => (
               <button
                 key={l}
                 onClick={() => s.set('language', l)}
+                aria-pressed={s.language === l}
                 className={cx(
-                  'rounded-lg px-3 py-1.5 font-mono text-xs uppercase',
+                  'rounded-lg px-3 py-1.5 font-mono text-xs uppercase transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/60',
                   s.language === l ? 'bg-accent/15 text-accent' : 'text-muted hover:text-ink',
                 )}
               >

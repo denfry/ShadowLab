@@ -8,6 +8,7 @@ import { AchievementManager } from '@/services/achievements/AchievementManager';
 import { SaveManager } from '@/services/save/SaveManager';
 import { LoadingScreen } from '@/ui/feedback/LoadingScreen';
 import { Button } from '@/ui/primitives/Button';
+import { Tag } from '@/ui/primitives/Tag';
 import { IconArrowLeft } from '@/ui/icons';
 
 interface GameCanvasWrapperProps {
@@ -104,7 +105,9 @@ function GameCanvasWrapperImpl({ gameId, mode, slot, params, bootHint, title }: 
         >
           Выход
         </Button>
-        <span className="chip pointer-events-auto">{title}</span>
+        <span className="pointer-events-auto">
+          <Tag tone="accent">{title}</Tag>
+        </span>
       </div>
 
       {phase === 'loading' && (
@@ -115,7 +118,7 @@ function GameCanvasWrapperImpl({ gameId, mode, slot, params, bootHint, title }: 
 
       {phase === 'error' && (
         <div className="absolute inset-0 z-10 grid place-items-center bg-bg p-6">
-          <div className="panel max-w-md p-6 text-center">
+          <div className="panel-glass max-w-md p-6 text-center">
             <p className="mb-2 font-display text-lg text-bad">Не удалось запустить игру</p>
             <p className="mb-4 font-mono text-xs text-muted">{error}</p>
             <Button onClick={() => navigate('/games')}>Назад к играм</Button>
