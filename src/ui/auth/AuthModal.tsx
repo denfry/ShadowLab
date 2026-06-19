@@ -23,6 +23,7 @@ export function AuthModal() {
   const [localErr, setLocalErr] = useState<string | null>(null);
 
   const submit = () => {
+    if (pending) return;
     const v = validateAuthForm(email, password);
     if (!v.ok) {
       setLocalErr(v.email ?? v.password);
@@ -38,10 +39,10 @@ export function AuthModal() {
   return (
     <Modal open={open} onClose={close} title={tab === 'in' ? 'Вход в аккаунт' : 'Создать аккаунт'}>
       <div className="mb-4 flex gap-2">
-        <Button variant={tab === 'in' ? 'primary' : 'subtle'} size="sm" onClick={() => setTab('in')}>
+        <Button variant={tab === 'in' ? 'primary' : 'subtle'} size="sm" onClick={() => { setTab('in'); setLocalErr(null); }}>
           Вход
         </Button>
-        <Button variant={tab === 'up' ? 'primary' : 'subtle'} size="sm" onClick={() => setTab('up')}>
+        <Button variant={tab === 'up' ? 'primary' : 'subtle'} size="sm" onClick={() => { setTab('up'); setLocalErr(null); }}>
           Регистрация
         </Button>
       </div>
@@ -74,7 +75,7 @@ export function AuthModal() {
         {(localErr || error) && <p className="text-xs text-bad">{localErr ?? error}</p>}
         {notice && <p className="text-xs text-good">{notice}</p>}
 
-        <Button variant="solid" className="w-full" loading={pending} disabled={!cloud} onClick={submit}>
+        <Button variant="solid" className="w-full" loading={pending} disabled={!cloud || pending} onClick={submit}>
           {tab === 'in' ? 'Войти' : 'Зарегистрироваться'}
         </Button>
 
