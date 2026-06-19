@@ -38,8 +38,11 @@ describe('useAuthStore', () => {
 
   it('drops to guest on sign-out', async () => {
     (auth.signOut as ReturnType<typeof vi.fn>).mockResolvedValue(undefined);
-    useAuthStore.setState({ status: 'authed' });
+    useAuthStore.setState({ status: 'authed', pending: true, error: 'x', authModalOpen: true });
     await useAuthStore.getState().signOut();
     expect(useAuthStore.getState().status).toBe('guest');
+    expect(useAuthStore.getState().pending).toBe(false);
+    expect(useAuthStore.getState().error).toBeNull();
+    expect(useAuthStore.getState().authModalOpen).toBe(false);
   });
 });

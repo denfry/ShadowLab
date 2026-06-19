@@ -41,6 +41,7 @@ export const useAuthStore = create<AuthStore>((set) => ({
   init: () => {
     if (!isCloudConfigured()) {
       set({ status: 'guest' });
+      appBus.emit('auth:change', { userId: null });
       return;
     }
     auth.onAuthChange((session) => applySession(set, session));
@@ -79,7 +80,7 @@ export const useAuthStore = create<AuthStore>((set) => ({
 
   signOut: async () => {
     await auth.signOut();
-    set({ status: 'guest', user: null, session: null });
+    set({ status: 'guest', user: null, session: null, pending: false, error: null, notice: null, authModalOpen: false });
     appBus.emit('auth:change', { userId: null });
   },
 
