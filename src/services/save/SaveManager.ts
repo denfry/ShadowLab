@@ -44,6 +44,7 @@ class SaveManagerImpl {
 
   private async persist(): Promise<void> {
     await this.adapter.set(ROOT_KEY, this.file);
+    appBus.emit('save:dirty', undefined);
   }
 
   getFile(): SaveFile {

@@ -13,6 +13,7 @@ export interface AppEvents extends Record<string, unknown> {
   'achievement:unlocked': { id: string; title: string };
   'save:written': { gameId: string; slot: number };
   'auth:change': { userId: string | null };
+  'save:dirty': void;
   'theme:change': string;
 }
 
