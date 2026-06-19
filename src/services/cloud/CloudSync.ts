@@ -56,7 +56,8 @@ class CloudSyncImpl {
     let cloud;
     try {
       cloud = await fetchCloudSave(this.userId);
-    } catch {
+    } catch (err) {
+      console.error('[CloudSync] initial sync failed', err);
       useSyncStore.getState().setPhase('error');
       return;
     }
@@ -95,7 +96,8 @@ class CloudSyncImpl {
     try {
       await upsertCloudSave(this.userId, SaveManager.getFile(), DEVICE);
       useSyncStore.getState().markSynced(nowIso());
-    } catch {
+    } catch (err) {
+      console.error('[CloudSync] push failed', err);
       useSyncStore.getState().setPhase('error');
     }
   }
@@ -111,6 +113,7 @@ class CloudSyncImpl {
     const c = useSyncStore.getState().conflict;
     if (!c) return;
     useSyncStore.getState().setConflict(null);
+    useSyncStore.getState().setPhase('syncing');
     if (choice === 'cloud') await this.applyCloud(c.cloud);
     await this.push();
     this.startListening();
