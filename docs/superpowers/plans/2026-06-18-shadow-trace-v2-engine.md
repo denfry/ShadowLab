@@ -1371,4 +1371,34 @@ cd /c/Projects/browser_game && git add src/games/shadow-trace/engine/index.ts &&
 - v1 game still untouched and working.
 
 **Next plan (Этап 1):** detective desk UI (Досье, Хранилище улик, Карта зацепок, Доска связей v2, Стол обвинения) + photo media inspector, wired to this engine and mounted as the Shadow Trace `GameModule`. Write that plan once this one is merged.
+
+## Этап 0 → Этап 1 handoff notes (from final review)
+
+The engine is READY TO MERGE (82/82 tests, 0 non-colony type errors). The final
+holistic review flagged foundation pieces the UI layer (Этап 1) must add — capture
+these as tasks in the Этап 1 plan so the UI does **not** re-implement gating outside
+the engine:
+
+1. **Read-only selectors (highest priority).** `Hotspot.revealRequires` /
+   `Hotspot.grants` / `Artifact.detectRequires` are defined but **no engine function
+   consumes them yet**. Add engine selectors so the UI stays thin:
+   `getOpenNodes(caseData, state)`, `getAvailableChoices(node, state)`,
+   `getVisibleHotspots(media, state)`, `getDetectedArtifacts(evidence, state)` —
+   all using `evaluateCondition`. Inspecting a hotspot/artifact should route its
+   `grants` through `applyEffects` (mirror of `visitNode`).
+2. **Broaden the validator.** It currently checks FactRefs, start nodes, hotspot
+   bounds, frame order, and reachability. Add: duplicate id detection
+   (node/evidence/statement/ending); `addEvidence`/`addStatement`/`addNode`/`lockNode`
+   effects pointing at non-existent ids (silent no-ops today); `relatedSuspectIds`
+   /`speakerId`/`solution culprit` referencing real suspects; `revealsStatementIds`
+   resolution.
+3. **Serialization + versioning.** `CaseProgressV2`/`CampaignState` need a
+   `schemaVersion` and serialize/deserialize hooks before wiring to the existing
+   `SaveManager` (Этап 3, but design the shape now).
+4. **Minor (non-blocking):** `scoreCaseV2` counts `correctLinks` by re-matching links
+   rather than by `foundContradictions` — add a doc note (they stay in sync only
+   because `addLink` is the sole writer). `Accusation.{method,motiveId,keyContradictionIds}`
+   and `PlayerLink relation:'explains'` are modelled but inert until a later stage
+   reads them. `StatementAssert`/`truthProfile` are dormant (contradictions are
+   authored, not derived) — fine by design.
 ```

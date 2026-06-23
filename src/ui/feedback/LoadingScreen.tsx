@@ -20,7 +20,7 @@ export function LoadingScreen({ progress, label = 'Загрузка', hint }: Lo
           <ProgressBar value={progress} />
         ) : (
           <div className="h-1.5 overflow-hidden rounded-full bg-bg-2">
-            <div className="h-full w-1/3 animate-[scan_1.2s_linear_infinite] rounded-full bg-accent" />
+            <div className="h-full w-1/3 animate-[scan_1.2s_linear_infinite] rounded-full bg-accent shadow-glow" />
           </div>
         )}
       </div>

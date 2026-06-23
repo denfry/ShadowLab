@@ -6,6 +6,7 @@ const state: CaseProgressV2 = {
   caseId: 'sample',
   openNodes: [],
   visitedNodes: [],
+  inspectedHotspots: [],
   discoveredEvidence: ['e_photo'],
   discoveredStatements: ['st_eron_home'],
   flags: { lab_done: true },
