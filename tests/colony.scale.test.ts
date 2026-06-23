@@ -2,6 +2,8 @@ import { describe, expect, it } from 'vitest';
 import { regenerateWorld, pickStartSite } from '@/games/colony/domain/worldgen';
 import { passableAt, biomeAt, forEachTile, neighbors4 } from '@/games/colony/systems/grid';
 import { MAP_W, MAP_H } from '@/games/colony/data/balance';
+import { createColony } from '@/games/colony/domain/createColony';
+import { tick } from '@/games/colony/systems/tick';
 
 describe('256² worldgen', () => {
   it('map is the configured size', () => {
@@ -37,4 +39,37 @@ describe('256² worldgen', () => {
     expect(kinds.has('forest')).toBe(true);
     expect(kinds.has('grass') || kinds.has('meadow')).toBe(true);
   }, 30000);
+});
+
+function populate(seed: number, n: number) {
+  const s = createColony(seed);
+  const base = s.colonists[0];
+  // spiral out from the start placing colonists on passable tiles (deterministic)
+  const start = { x: Math.round(base.pos.x), y: Math.round(base.pos.y) };
+  const spots: Array<{ x: number; y: number }> = [];
+  for (let rad = 0; rad < 40 && spots.length < n; rad++)
+    for (let dy = -rad; dy <= rad && spots.length < n; dy++)
+      for (let dx = -rad; dx <= rad && spots.length < n; dx++) {
+        if (Math.max(Math.abs(dx), Math.abs(dy)) !== rad) continue;
+        const x = start.x + dx, y = start.y + dy;
+        if (passableAt(s.map, x, y)) spots.push({ x, y });
+      }
+  s.colonists = spots.slice(0, n).map((p, i) => ({
+    ...base, id: `c${i}`, name: `C${i}`, pos: { x: p.x, y: p.y }, path: [], task: 'idle' as const,
+  }));
+  return s;
+}
+
+describe('scale smoke', () => {
+  it('256² with 200 agents runs 300 ticks without throwing', () => {
+    const s = populate(2026, 200);
+    expect(s.colonists.length).toBe(200);
+    expect(() => { for (let i = 0; i < 300; i++) tick(s); }).not.toThrow();
+  }, 120000);
+  it('one seed -> identical run with 200 agents', () => {
+    const a = populate(2026, 200), b = populate(2026, 200);
+    for (let i = 0; i < 200; i++) { tick(a); tick(b); }
+    const proj = (s: any) => s.colonists.map((c: any) => [c.task, Math.round(c.pos.x), Math.round(c.pos.y), c.path.length]);
+    expect(proj(a)).toEqual(proj(b));
+  }, 120000);
 });
