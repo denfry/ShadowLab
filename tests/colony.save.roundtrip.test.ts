@@ -2,7 +2,7 @@
 import { describe, it, expect } from 'vitest';
 import { createColony } from '@/games/colony/domain/createColony';
 import { toSave, fromSave } from '@/games/colony/domain/save';
-import { nodeAt, biomeAt } from '@/games/colony/systems/grid';
+import { nodeAt, biomeAt, setNode } from '@/games/colony/systems/grid';
 import { idx } from '@/games/colony/systems/grid';
 
 describe('save round-trip', () => {
@@ -29,6 +29,15 @@ describe('save round-trip', () => {
     wt.node!.amount = 3;
     const r = fromSave(toSave(s));
     expect(nodeAt(r.map, wt.x, wt.y)?.amount).toBe(3);
+  });
+  it('узел, которого нет в свежей генерации, восстанавливается полностью (kind/amount/max)', () => {
+    const s = createColony(77);
+    // Найдём тайл без узла и поставим узел камня вручную (gen там узла не создаёт).
+    const t = s.map.tiles.find((tt) => !tt.node && tt.biome !== 'water')!;
+    setNode(s.map, t.x, t.y, { kind: 'stone', amount: 5, max: 10 });
+    const r = fromSave(toSave(s));
+    const n = nodeAt(r.map, t.x, t.y);
+    expect(n).toEqual({ kind: 'stone', amount: 5, max: 10 });
   });
   it('постройки восстанавливают buildingId/passable тайла', () => {
     const s = createColony(77);

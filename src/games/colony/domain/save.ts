@@ -1,9 +1,9 @@
 // src/games/colony/domain/save.ts
-import type { Biome, Building, Colonist, ColonyState, LogEntry, Resource, ResourceId, Room } from './types';
+import type { Biome, Building, Colonist, ColonyState, LogEntry, Resource, ResourceId, ResourceNode, Room } from './types';
 import { regenerateWorld } from './worldgen';
 import { idx, setBuildingId, setPassable } from '../systems/grid';
 
-export interface TileOverride { i: number; biome?: Biome; nodeAmount?: number | null; }
+export interface TileOverride { i: number; biome?: Biome; node?: ResourceNode | null; }
 
 export interface ColonySave {
   version: number;
@@ -33,15 +33,14 @@ function diffOverrides(s: ColonyState): TileOverride[] {
   for (let i = 0; i < s.map.tiles.length; i++) {
     const cur = s.map.tiles[i];
     const gen = fresh.tiles[i];
-    const biomeChanged = cur.biome !== gen.biome;
-    const curAmt = cur.node?.amount ?? null;
-    const genAmt = gen.node?.amount ?? null;
-    const nodeChanged = curAmt !== genAmt;
+    const g = gen, cn = cur.node, gn = g.node;
+    const biomeChanged = cur.biome !== g.biome;
+    const nodeChanged = (cn?.kind !== gn?.kind) || (cn?.amount !== gn?.amount) || (cn?.max !== gn?.max);
     if (biomeChanged || nodeChanged) {
       out.push({
         i,
         ...(biomeChanged ? { biome: cur.biome } : {}),
-        ...(nodeChanged ? { nodeAmount: curAmt } : {}),
+        ...(nodeChanged ? { node: cn ? { ...cn } : null } : {}),
       });
     }
   }
@@ -78,10 +77,7 @@ export function fromSave(p: ColonySave): ColonyState {
     const t = map.tiles[o.i];
     if (!t) continue;
     if (o.biome !== undefined) t.biome = o.biome;
-    if (o.nodeAmount !== undefined) {
-      if (o.nodeAmount === null) t.node = undefined;
-      else if (t.node) t.node.amount = o.nodeAmount;
-    }
+    if (o.node !== undefined) t.node = o.node === null ? undefined : { ...o.node };
   }
   // Восстановление производного из построек.
   for (const b of p.buildings) {

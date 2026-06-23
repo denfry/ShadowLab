@@ -1,4 +1,4 @@
-import type { Building, Colonist, ColonyState, JobType, Pt, Tile } from '../domain/types';
+import type { Building, Colonist, ColonyState, JobType, Pt } from '../domain/types';
 import { findPath } from './pathfinding';
 import { tileAt, findNearestNode } from './grid';
 
