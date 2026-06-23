@@ -41,4 +41,13 @@ describe('tick orchestration', () => {
     const after = s.colonists.map((c) => `${c.pos.x.toFixed(2)},${c.pos.y.toFixed(2)}`);
     expect(after).not.toEqual(before);
   });
+
+  it('один сид → идентичный прогон 300 тиков', () => {
+    const a = createColony(2024);
+    const b = createColony(2024);
+    for (let i = 0; i < 300; i++) { tick(a); tick(b); }
+    expect(a.resources.wood.amount).toBe(b.resources.wood.amount);
+    expect(a.colonists.map((c) => `${c.pos.x.toFixed(3)},${c.pos.y.toFixed(3)}`))
+      .toEqual(b.colonists.map((c) => `${c.pos.x.toFixed(3)},${c.pos.y.toFixed(3)}`));
+  });
 });
