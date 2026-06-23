@@ -65,6 +65,16 @@ describe('findPathHier', () => {
     const hier = findPathHier(m, nav, { x: 1, y: 1 }, { x: 5, y: 1 })!;
     expect(hier.length).toBe(4);
   });
+  it('cross-cluster path with an intra-cluster portal-to-portal hop stays valid and bounded', () => {
+    const m = createMap(48, 16); // 3x1 clusters, fully open -> path crosses the middle cluster
+    const nav = buildNav(m, 16);
+    const start = { x: 1, y: 8 }, goal = { x: 46, y: 8 };
+    const hier = findPathHier(m, nav, start, goal)!;
+    const opt = findPath(m, start, goal)!;
+    expect(hier).not.toBeNull();
+    expect(valid(m, start, hier, goal)).toBe(true);
+    expect(hier.length).toBeLessThanOrEqual(Math.ceil(opt.length * PATH_LEN_BOUND_K));
+  });
 });
 
 describe('intra-cluster distances + buildNav', () => {
