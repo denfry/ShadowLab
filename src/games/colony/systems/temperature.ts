@@ -1,5 +1,5 @@
 import type { ColonyState } from '../domain/types';
-import { idx } from './grid';
+import { roomIdAt, setTemp, forEachTile } from './grid';
 import { AREA_NORM, HEATER_FUEL_PER_TICK, HEATER_OUTPUT, TEMP_LERP } from '../data/balance';
 
 /** По-комнатная температура + сжигание дерева обогревателями. Без RNG. */
@@ -10,8 +10,7 @@ export function runTemperature(s: ColonyState): void {
   const activeByRoom = new Map<number, number>();
   for (const b of s.buildings) {
     if (b.type !== 'heater' || !b.built) continue;
-    const t = s.map.tiles[idx(b.tile.x, b.tile.y, s.map.w)];
-    const rid = t ? t.roomId : 0;
+    const rid = roomIdAt(s.map, b.tile.x, b.tile.y);
     if (rid === 0) continue; // уличный обогреватель бесполезен
     if (s.resources.wood.amount >= HEATER_FUEL_PER_TICK) {
       s.resources.wood.amount -= HEATER_FUEL_PER_TICK;
@@ -29,7 +28,8 @@ export function runTemperature(s: ColonyState): void {
   // Запись температуры в тайлы.
   const roomTemp = new Map<number, number>();
   for (const room of s.rooms) roomTemp.set(room.id, room.temp);
-  for (const t of s.map.tiles) {
-    t.temp = t.roomId === 0 ? outdoor : roomTemp.get(t.roomId) ?? outdoor;
-  }
+  forEachTile(s.map, (_i, x, y) => {
+    const rid = roomIdAt(s.map, x, y);
+    setTemp(s.map, x, y, rid === 0 ? outdoor : roomTemp.get(rid) ?? outdoor);
+  });
 }
