@@ -1,10 +1,11 @@
 import { describe, expect, it } from 'vitest';
 import { createColony } from '@/games/colony/domain/createColony';
 import { runNeeds, coldWorkFactor } from '@/games/colony/systems/needs';
+import { forEachTile, setTemp } from '@/games/colony/systems/grid';
 
 function freezeColonist(s: ReturnType<typeof createColony>) {
   // Поставить все тайлы холодными.
-  for (const t of s.map.tiles) t.temp = -10;
+  forEachTile(s.map, (_i, x, y) => setTemp(s.map, x, y, -10));
 }
 
 describe('cold need', () => {
@@ -30,7 +31,7 @@ describe('cold need', () => {
 
   it('warmth lowers cold', () => {
     const s = createColony(1);
-    for (const t of s.map.tiles) t.temp = 22;
+    forEachTile(s.map, (_i, x, y) => setTemp(s.map, x, y, 22));
     const c = s.colonists[0];
     c.needs.cold = 50;
     runNeeds(s);
@@ -39,7 +40,7 @@ describe('cold need', () => {
 
   it('freezing damages health', () => {
     const s = createColony(1);
-    for (const t of s.map.tiles) t.temp = -10;
+    forEachTile(s.map, (_i, x, y) => setTemp(s.map, x, y, -10));
     const c = s.colonists[0];
     const before = c.health;
     runNeeds(s);

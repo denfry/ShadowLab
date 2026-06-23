@@ -3,7 +3,7 @@ import { createColony } from '@/games/colony/domain/createColony';
 import { runWork } from '@/games/colony/systems/work';
 import type { Building } from '@/games/colony/domain/types';
 import { MAP_W, MAP_H } from '@/games/colony/data/balance';
-import { setNode, setBiome, nodeAt, biomeAt } from '@/games/colony/systems/grid';
+import { setNode, setBiome, nodeAt, biomeAt, setBuildingId, setTemp } from '@/games/colony/systems/grid';
 
 const center = () => ({ x: Math.floor(MAP_W / 2), y: Math.floor(MAP_H / 2) });
 
@@ -13,7 +13,7 @@ describe('work system', () => {
     const t = center();
     const farm: Building = { id: 'f1', type: 'farm', tile: t, workSlots: 3, jobType: 'farm', built: true, buildProgress: 30, buildRequired: 30 };
     s.buildings.push(farm);
-    s.map.tiles[t.y * MAP_W + t.x].buildingId = 'f1';
+    setBuildingId(s.map, t.x, t.y, 'f1');
     const c = s.colonists[0];
     c.task = 'work'; c.targetBuildingId = 'f1'; c.targetTile = t; c.pos = { ...t };
     const food0 = s.resources.food.amount;
@@ -55,7 +55,7 @@ describe('work system', () => {
     const t = { x: Math.floor(s.map.w / 2), y: Math.floor(s.map.h / 2) };
     const farm = { id: 'f1', type: 'farm' as const, tile: t, workSlots: 3, jobType: 'farm' as const, built: true, buildProgress: 30, buildRequired: 30 };
     s.buildings.push(farm);
-    s.map.tiles[t.y * s.map.w + t.x].temp = -5; // мороз
+    setTemp(s.map, t.x, t.y, -5); // мороз
     const c = s.colonists[0];
     c.task = 'work'; c.targetBuildingId = 'f1'; c.targetTile = t; c.pos = { ...t };
     const before = s.resources.food.amount;

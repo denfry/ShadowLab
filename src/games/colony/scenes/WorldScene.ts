@@ -5,6 +5,7 @@ import { TILE } from '../data/balance';
 import { tick, alive } from '../systems/tick';
 import { computeHud } from '../systems/projection';
 import { placeBlueprint, canPlace } from '../systems/build';
+import { forEachTile, biomeAt, tempAt } from '../systems/grid';
 import { createColony } from '../domain/createColony';
 import { toSave } from '../domain/save';
 import { randomSeed } from '@/core/utils/rng';
@@ -76,10 +77,11 @@ export class WorldScene extends Phaser.Scene {
 
   private drawMap() {
     const g = this.add.graphics();
-    for (const t of this.state.map.tiles) {
-      g.fillStyle(BIOME_COLOR[t.biome] ?? 0x222222, 1);
-      g.fillRect(t.x * TILE, t.y * TILE, TILE - 1, TILE - 1);
-    }
+    forEachTile(this.state.map, (_i, x, y) => {
+      const b = biomeAt(this.state.map, x, y) ?? 'grass';
+      g.fillStyle(BIOME_COLOR[b] ?? 0x222222, 1);
+      g.fillRect(x * TILE, y * TILE, TILE - 1, TILE - 1);
+    });
     g.lineStyle(1, 0x000000, 0.15);
     g.strokeRect(0, 0, this.mapPxW, this.mapPxH);
   }
@@ -108,13 +110,13 @@ export class WorldScene extends Phaser.Scene {
   private drawTempOverlay() {
     this.tempLayer.clear();
     if (!this.tempOverlay) return;
-    for (const t of this.state.map.tiles) {
+    forEachTile(this.state.map, (_i, x, y) => {
       // синий (холод) → красный (тепло), диапазон -20..30
-      const k = Math.max(0, Math.min(1, (t.temp + 20) / 50));
+      const k = Math.max(0, Math.min(1, (tempAt(this.state.map, x, y) + 20) / 50));
       const r = Math.floor(k * 255), b = Math.floor((1 - k) * 255);
       this.tempLayer.fillStyle((r << 16) | (0x30 << 8) | b, 0.35);
-      this.tempLayer.fillRect(t.x * TILE, t.y * TILE, TILE - 1, TILE - 1);
-    }
+      this.tempLayer.fillRect(x * TILE, y * TILE, TILE - 1, TILE - 1);
+    });
   }
 
   private spawnDots() {

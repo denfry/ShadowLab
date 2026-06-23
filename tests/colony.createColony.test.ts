@@ -1,13 +1,16 @@
 import { describe, expect, it } from 'vitest';
 import { createColony } from '@/games/colony/domain/createColony';
 import { START_COLONISTS } from '@/games/colony/data/balance';
-import { passableAt } from '@/games/colony/systems/grid';
+import { passableAt, biomeAt, forEachTile } from '@/games/colony/systems/grid';
 
 describe('createColony', () => {
   it('is deterministic for a given seed', () => {
     const a = createColony(999);
     const b = createColony(999);
-    expect(a.map.tiles.map((t) => t.biome)).toEqual(b.map.tiles.map((t) => t.biome));
+    const biomesA: string[] = [], biomesB: string[] = [];
+    forEachTile(a.map, (_i, x, y) => biomesA.push(biomeAt(a.map, x, y) ?? ''));
+    forEachTile(b.map, (_i, x, y) => biomesB.push(biomeAt(b.map, x, y) ?? ''));
+    expect(biomesA).toEqual(biomesB);
   });
 
   it('spawns the starting colonists with names, traits and skills', () => {

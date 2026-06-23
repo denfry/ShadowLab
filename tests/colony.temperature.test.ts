@@ -3,6 +3,7 @@ import { createColony } from '@/games/colony/domain/createColony';
 import { recomputeRooms } from '@/games/colony/systems/rooms';
 import { runTemperature } from '@/games/colony/systems/temperature';
 import type { Building } from '@/games/colony/domain/types';
+import { tempAt } from '@/games/colony/systems/grid';
 
 const wall = (id: string, x: number, y: number): Building => ({
   id, type: 'wall', tile: { x, y }, workSlots: 0, jobType: undefined, built: true, buildProgress: 8, buildRequired: 8,
@@ -45,6 +46,6 @@ describe('temperature system', () => {
     s.env.outdoorTemp = 5;
     recomputeRooms(s);
     runTemperature(s);
-    expect(s.map.tiles[0].temp).toBe(5);
+    expect(tempAt(s.map, 0, 0)).toBe(5);
   });
 });

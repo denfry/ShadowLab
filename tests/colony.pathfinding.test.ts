@@ -1,14 +1,12 @@
 import { describe, expect, it } from 'vitest';
 import { findPath } from '@/games/colony/systems/pathfinding';
+import { createMap, setPassable } from '@/games/colony/systems/grid';
 import type { ColonyMap } from '@/games/colony/systems/grid';
 
 function grid(w: number, h: number, blocked: [number, number][] = []): ColonyMap {
-  const tiles = Array.from({ length: w * h }, (_, i) => ({
-    x: i % w, y: Math.floor(i / w), biome: 'grass' as const, elevation: 0.5,
-    fertility: 0.5, passable: true, roomId: 0, temp: 16,
-  }));
-  for (const [x, y] of blocked) tiles[y * w + x].passable = false;
-  return { w, h, tiles };
+  const m = createMap(w, h);
+  for (const [x, y] of blocked) setPassable(m, x, y, false);
+  return m;
 }
 
 describe('A* pathfinding', () => {

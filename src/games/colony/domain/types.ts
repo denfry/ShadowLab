@@ -92,7 +92,7 @@ export interface ColonyState {
     outdoorTemp: number;
     weather: 'clear' | 'snow' | 'cold_snap';
   };
-  map: { w: number; h: number; tiles: Tile[] };
+  map: import('../systems/grid').ColonyMap;
   log: LogEntry[];
   flags: { gameOver: boolean; victory: boolean };
 }
