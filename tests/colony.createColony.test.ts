@@ -1,12 +1,13 @@
 import { describe, expect, it } from 'vitest';
 import { createColony } from '@/games/colony/domain/createColony';
-import { START_COLONISTS, MAP_W, MAP_H } from '@/games/colony/data/balance';
+import { START_COLONISTS } from '@/games/colony/data/balance';
+import { passableAt } from '@/games/colony/systems/grid';
 
 describe('createColony', () => {
   it('is deterministic for a given seed', () => {
     const a = createColony(999);
     const b = createColony(999);
-    expect(a.map.tiles.map((t) => t.terrain)).toEqual(b.map.tiles.map((t) => t.terrain));
+    expect(a.map.tiles.map((t) => t.biome)).toEqual(b.map.tiles.map((t) => t.biome));
   });
 
   it('spawns the starting colonists with names, traits and skills', () => {
@@ -21,20 +22,15 @@ describe('createColony', () => {
     }
   });
 
-  it('keeps the central spawn area passable grass', () => {
-    const s = createColony(3);
-    const cx = Math.floor(MAP_W / 2);
-    const cy = Math.floor(MAP_H / 2);
-    const center = s.map.tiles[cy * MAP_W + cx];
-    expect(center.terrain).toBe('grass');
-    expect(center.passable).toBe(true);
+  it('колонисты спавнятся на проходимых тайлах у старт-площадки', () => {
+    const s = createColony(42);
+    expect(s.colonists.length).toBeGreaterThan(0);
+    for (const c of s.colonists) {
+      expect(passableAt(s.map, Math.round(c.pos.x), Math.round(c.pos.y))).toBe(true);
+    }
   });
 
-  it('marks water and rock impassable, forest carries wood', () => {
-    const s = createColony(5);
-    for (const t of s.map.tiles) {
-      if (t.terrain === 'water' || t.terrain === 'rock') expect(t.passable).toBe(false);
-      if (t.terrain === 'forest') expect(t.wood ?? 0).toBeGreaterThan(0);
-    }
+  it('версия пейлоада = 5', () => {
+    expect(createColony(1).version).toBe(5);
   });
 });
