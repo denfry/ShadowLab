@@ -1,7 +1,9 @@
 // src/games/colony/domain/save.ts
 import type { Biome, Building, Colonist, ColonyState, LogEntry, Resource, ResourceId, ResourceNode, Room } from './types';
 import { regenerateWorld } from './worldgen';
-import { idx, setBuildingId, setPassable } from '../systems/grid';
+import { idx, setBuildingId, setPassable, setBiome, setNode, biomeAt, nodeAt, forEachTile } from '../systems/grid';
+import { buildNav } from '../systems/pathHierarchy';
+import { CLUSTER } from '../data/balance';
 
 export interface TileOverride { i: number; biome?: Biome; node?: ResourceNode | null; }
 
@@ -21,6 +23,7 @@ export interface ColonySave {
   tailorProgress: number;
   stock: { clothing: number };
   env: ColonyState['env'];
+  assignCursor: number;
   log: LogEntry[];
   flags: { gameOver: boolean; victory: boolean };
   overrides: TileOverride[];
@@ -30,20 +33,19 @@ export interface ColonySave {
 function diffOverrides(s: ColonyState): TileOverride[] {
   const fresh = regenerateWorld(s.seed);
   const out: TileOverride[] = [];
-  for (let i = 0; i < s.map.tiles.length; i++) {
-    const cur = s.map.tiles[i];
-    const gen = fresh.tiles[i];
-    const g = gen, cn = cur.node, gn = g.node;
-    const biomeChanged = cur.biome !== g.biome;
+  forEachTile(s.map, (i, x, y) => {
+    const cb = biomeAt(s.map, x, y), gb = biomeAt(fresh, x, y);
+    const cn = nodeAt(s.map, x, y), gn = nodeAt(fresh, x, y);
+    const biomeChanged = cb !== gb;
     const nodeChanged = (cn?.kind !== gn?.kind) || (cn?.amount !== gn?.amount) || (cn?.max !== gn?.max);
     if (biomeChanged || nodeChanged) {
       out.push({
         i,
-        ...(biomeChanged ? { biome: cur.biome } : {}),
+        ...(biomeChanged ? { biome: cb } : {}),
         ...(nodeChanged ? { node: cn ? { ...cn } : null } : {}),
       });
     }
-  }
+  });
   return out;
 }
 
@@ -64,6 +66,7 @@ export function toSave(s: ColonyState): ColonySave {
     tailorProgress: s.tailorProgress,
     stock: s.stock,
     env: s.env,
+    assignCursor: s.assignCursor,
     log: s.log,
     flags: s.flags,
     overrides: diffOverrides(s),
@@ -74,10 +77,9 @@ export function fromSave(p: ColonySave): ColonyState {
   const map = regenerateWorld(p.seed);
   // Накат оверрайдов тайлов.
   for (const o of p.overrides) {
-    const t = map.tiles[o.i];
-    if (!t) continue;
-    if (o.biome !== undefined) t.biome = o.biome;
-    if (o.node !== undefined) t.node = o.node === null ? undefined : { ...o.node };
+    const x = o.i % map.w, y = Math.floor(o.i / map.w);
+    if (o.biome !== undefined) setBiome(map, x, y, o.biome);
+    if (o.node !== undefined) setNode(map, x, y, o.node === null ? undefined : { ...o.node });
   }
   // Восстановление производного из построек.
   for (const b of p.buildings) {
@@ -85,6 +87,7 @@ export function fromSave(p: ColonySave): ColonyState {
     setBuildingId(map, b.tile.x, b.tile.y, b.id);
     if (b.type === 'wall') setPassable(map, b.tile.x, b.tile.y, false);
   }
+  const nav = buildNav(map, CLUSTER);
   return {
     version: p.version,
     seed: p.seed,
@@ -102,6 +105,8 @@ export function fromSave(p: ColonySave): ColonyState {
     stock: p.stock,
     env: p.env,
     map,
+    nav,
+    assignCursor: p.assignCursor ?? 0,
     log: p.log,
     flags: p.flags,
   };

@@ -1,9 +1,9 @@
 // src/games/colony/domain/worldgen.ts
 import { fbm } from '@/core/utils/noise';
-import type { Biome, NodeKind, Pt, ResourceNode, Tile } from './types';
+import type { Biome, NodeKind, Pt, ResourceNode } from './types';
 import { GEN, BIOME_FERTILITY, MAP_W, MAP_H } from '../data/balance';
 import type { ColonyMap } from '../systems/grid';
-import { idx, passableAt } from '../systems/grid';
+import { createMap, idx, setBiome, setNode, setPassable, passableAt, biomeAt } from '../systems/grid';
 
 /** Биом по высоте/влажности. */
 function classify(elev: number, moist: number): Biome {
@@ -57,6 +57,7 @@ function carveRivers(seed: number, w: number, h: number, elev: Float64Array, isW
 
 export function regenerateWorld(seed: number): ColonyMap {
   const w = MAP_W, h = MAP_H;
+  const m = createMap(w, h);
   const elev = new Float64Array(w * h);
   const isWater = new Uint8Array(w * h);
   for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
@@ -66,22 +67,19 @@ export function regenerateWorld(seed: number): ColonyMap {
   }
   carveRivers(seed, w, h, elev, isWater);
 
-  const tiles: Tile[] = new Array(w * h);
   for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
     const i = idx(x, y, w);
     const e = elev[i];
     const moist = fbm(seed * 13 + 99, x / GEN.moistScale, y / GEN.moistScale, 4);
     const biome: Biome = isWater[i] ? 'water' : classify(e, moist);
-    const passable = biome !== 'water' && biome !== 'mountain';
+    m.elevation[i] = e;
+    m.fertility[i] = BIOME_FERTILITY[biome];
+    setBiome(m, x, y, biome);
+    setPassable(m, x, y, biome !== 'water' && biome !== 'mountain');
     const node = nodeFor(seed, x, y, biome);
-    tiles[i] = {
-      x, y, biome, elevation: e,
-      fertility: BIOME_FERTILITY[biome],
-      passable, roomId: 0, temp: 16,
-      ...(node ? { node } : {}),
-    };
+    if (node) setNode(m, x, y, node);
   }
-  return { w, h, tiles };
+  return m;
 }
 
 /** Стартовая площадка: проходимый луг/трава ближе к центру, рядом — вода и лес. */
@@ -90,22 +88,19 @@ export function pickStartSite(m: ColonyMap): Pt {
   const near = (x: number, y: number, biome: Biome, rad: number): boolean => {
     for (let dy = -rad; dy <= rad; dy++) for (let dx = -rad; dx <= rad; dx++) {
       const nx = x + dx, ny = y + dy;
-      if (nx < 0 || ny < 0 || nx >= m.w || ny >= m.h) continue;
-      if (m.tiles[idx(nx, ny, m.w)].biome === biome) return true;
+      if (biomeAt(m, nx, ny) === biome) return true;
     }
     return false;
   };
-  let best: Pt | undefined;
-  let bestScore = -Infinity;
+  let best: Pt | undefined; let bestScore = -Infinity;
   for (let y = 2; y < m.h - 2; y++) for (let x = 2; x < m.w - 2; x++) {
-    const b = m.tiles[idx(x, y, m.w)].biome;
+    const b = biomeAt(m, x, y);
     if ((b !== 'meadow' && b !== 'grass') || !passableAt(m, x, y)) continue;
-    let score = -(Math.abs(x - cx) + Math.abs(y - cy));      // ближе к центру лучше
+    let score = -(Math.abs(x - cx) + Math.abs(y - cy));
     if (near(x, y, 'water', 6)) score += 5;
     if (near(x, y, 'forest', 8)) score += 5;
     if (score > bestScore) { bestScore = score; best = { x, y }; }
   }
-  // Фолбэк: любой проходимый тайл ближе к центру (на случай вырожденной карты).
   if (!best) {
     for (let y = 0; y < m.h && !best; y++) for (let x = 0; x < m.w && !best; x++) {
       if (passableAt(m, x, y)) best = { x, y };

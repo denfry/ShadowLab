@@ -1,11 +1,12 @@
 import { describe, expect, it } from 'vitest';
 import { createColony } from '@/games/colony/domain/createColony';
 import { computeHud } from '@/games/colony/systems/projection';
+import { forEachTile, roomIdAt, tempAt } from '@/games/colony/systems/grid';
 
 describe('phase 1 model migration', () => {
   it('initializes env, rooms, stock and tailorProgress', () => {
     const s = createColony(1);
-    expect(s.version).toBe(5);
+    expect(s.version).toBe(6);
     expect(s.env.season).toBe('spring');
     expect(s.rooms).toEqual([]);
     expect(s.roomSig).toBe('');
@@ -15,7 +16,11 @@ describe('phase 1 model migration', () => {
 
   it('initializes new tile and colonist fields', () => {
     const s = createColony(1);
-    expect(s.map.tiles.every((t) => t.roomId === 0 && typeof t.temp === 'number')).toBe(true);
+    let allOk = true;
+    forEachTile(s.map, (_i, x, y) => {
+      if (roomIdAt(s.map, x, y) !== 0 || typeof tempAt(s.map, x, y) !== 'number') allOk = false;
+    });
+    expect(allOk).toBe(true);
     expect(s.colonists.every((c) => c.clothed === false && c.needs.cold === 0)).toBe(true);
   });
 

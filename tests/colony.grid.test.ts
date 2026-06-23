@@ -2,26 +2,16 @@ import { describe, expect, it } from 'vitest';
 import {
   idx, inBounds, tileAt, neighbors4,
   biomeAt, passableAt, tempAt, nodeAt, setPassable, setBiome, setNode,
-  depleteNode, findNearestNode, forEachTile,
+  depleteNode, findNearestNode, forEachTile, createMap,
 } from '@/games/colony/systems/grid';
 import type { ColonyMap } from '@/games/colony/systems/grid';
-import type { Tile } from '@/games/colony/domain/types';
 
-const grid = (w: number, h: number): { w: number; h: number; tiles: Tile[] } => {
-  const tiles: Tile[] = [];
-  for (let y = 0; y < h; y++)
-    for (let x = 0; x < w; x++)
-      tiles.push({ x, y, biome: 'grass', elevation: 0.5, fertility: 0.5, passable: true, roomId: 0, temp: 16 });
-  return { w, h, tiles };
-};
+const grid = (w: number, h: number): ColonyMap => createMap(w, h);
 
 function makeMap(): ColonyMap {
-  const w = 3, h = 1;
-  const tiles = Array.from({ length: w * h }, (_, i) => ({
-    x: i % w, y: 0, biome: 'grass' as const, elevation: 0.5, fertility: 0.4,
-    passable: true, roomId: 0, temp: 16,
-  }));
-  return { w, h, tiles };
+  const m = createMap(3, 1);
+  for (let x = 0; x < 3; x++) { setBiome(m, x, 0, 'grass'); }
+  return m;
 }
 
 describe('grid helpers', () => {

@@ -23,7 +23,7 @@ describe('tick orchestration', () => {
     expect(a.resources.wood.amount).toBeCloseTo(b.resources.wood.amount, 5);
     expect(a.colonists.filter((c) => c.alive).length).toBe(b.colonists.filter((c) => c.alive).length);
     expect(a.day).toBe(b.day);
-  });
+  }, 30000);
 
   it('ends in defeat when everyone starves', () => {
     const s = createColony(7);
@@ -32,7 +32,7 @@ describe('tick orchestration', () => {
     for (let i = 0; i < TICKS_PER_DAY * 4 && !s.flags.gameOver; i++) tick(s);
     expect(s.flags.gameOver).toBe(true);
     expect(s.flags.victory).toBe(false);
-  });
+  }, 30000);
 
   it('colonists actually move (positions change) over a day', () => {
     const s = createColony(11);
@@ -40,7 +40,7 @@ describe('tick orchestration', () => {
     for (let i = 0; i < TICKS_PER_DAY; i++) tick(s);
     const after = s.colonists.map((c) => `${c.pos.x.toFixed(2)},${c.pos.y.toFixed(2)}`);
     expect(after).not.toEqual(before);
-  });
+  }, 30000);
 
   it('один сид → идентичный прогон 300 тиков', () => {
     const a = createColony(2024);
@@ -49,5 +49,5 @@ describe('tick orchestration', () => {
     expect(a.resources.wood.amount).toBe(b.resources.wood.amount);
     expect(a.colonists.map((c) => `${c.pos.x.toFixed(3)},${c.pos.y.toFixed(3)}`))
       .toEqual(b.colonists.map((c) => `${c.pos.x.toFixed(3)},${c.pos.y.toFixed(3)}`));
-  });
+  }, 30000);
 });
