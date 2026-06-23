@@ -42,4 +42,16 @@ describe('spatialIndex', () => {
       expect(nearest(ix, 128, 128, from, 'wood')).toEqual(brute(pts, from, 'wood'));
     }
   });
+  it('breaks equal-distance ties by insertion order, even across clusters', () => {
+    // within-cluster tie: first inserted wins; reversed insertion flips the winner
+    const a = [{ x: 5, y: 0, cat: 'wood' }, { x: 0, y: 5, cat: 'wood' }];
+    expect(nearest(buildIndex(64, 64, 16, a), 64, 64, { x: 0, y: 0 }, 'wood')).toEqual({ x: 5, y: 0 });
+    expect(nearest(buildIndex(64, 64, 16, [a[1], a[0]]), 64, 64, { x: 0, y: 0 }, 'wood')).toEqual({ x: 0, y: 5 });
+
+    // cross-cluster tie from (8,8), cs=16: A=(8,24) cluster (0,1), B=(24,8) cluster (1,0),
+    // both Manhattan distance 16. The ring scan visits cluster (1,0)=B before (0,1)=A,
+    // but A was inserted first so A must win — proving the _idx tie-break, not scan order.
+    const pts = [{ x: 8, y: 24, cat: 'wood' }, { x: 24, y: 8, cat: 'wood' }];
+    expect(nearest(buildIndex(64, 64, 16, pts), 64, 64, { x: 8, y: 8 }, 'wood')).toEqual({ x: 8, y: 24 });
+  });
 });

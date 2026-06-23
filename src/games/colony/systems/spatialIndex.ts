@@ -7,7 +7,7 @@ export interface SpatialIndex {
 }
 
 /** Internal extension — carries insertion index for deterministic tie-breaking. */
-interface IndexedPt extends Pt { _idx: number; }
+type IndexedPt = Pt & { _idx: number };
 
 const clusterIdOf = (x: number, y: number, cs: number, cw: number) =>
   Math.floor(y / cs) * cw + Math.floor(x / cs);
@@ -51,12 +51,11 @@ export function nearest(
   const maxRing = Math.max(cw, ch);
 
   let best: Pt | undefined; let bestD = Infinity; let bestIdx = Infinity;
-  const consider = (p: Pt) => {
+  const consider = (p: IndexedPt) => {
     if (accept && !accept(p)) return;
     const d = Math.abs(p.x - from.x) + Math.abs(p.y - from.y);
-    const pidx = (p as IndexedPt)._idx ?? Infinity;
-    if (d < bestD || (d === bestD && pidx < bestIdx)) {
-      bestD = d; bestIdx = pidx; best = { x: p.x, y: p.y };
+    if (d < bestD || (d === bestD && p._idx < bestIdx)) {
+      bestD = d; bestIdx = p._idx; best = { x: p.x, y: p.y };
     }
   };
   for (let ring = 0; ring <= maxRing; ring++) {
@@ -65,7 +64,7 @@ export function nearest(
         if (Math.max(Math.abs(cx - fcx), Math.abs(cy - fcy)) !== ring) continue; // ring shell only
         if (cx < 0 || cy < 0 || cx >= cw || cy >= ch) continue;
         const arr = byCluster.get(cy * cw + cx);
-        if (arr) for (const p of arr) consider(p);
+        if (arr) for (const p of arr as IndexedPt[]) consider(p);
       }
     }
     // Останов: ближайшая найденная точка ближе, чем минимально возможная точка
