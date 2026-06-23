@@ -5,7 +5,7 @@ import { randomSeed } from '@/core/utils/rng';
 import { COLONY_DEFINITION } from './definition';
 import type { ColonyState } from './domain/types';
 import { createColony } from './domain/createColony';
-import { toSave, fromSave, type ColonySave } from './domain/save';
+import { fromSave, type ColonySave } from './domain/save';
 import { WorldScene } from './scenes/WorldScene';
 import { ColonyHud } from './ui/ColonyHud';
 
