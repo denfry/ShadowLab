@@ -11,7 +11,7 @@ import { NewsPage } from '@/pages/news/NewsPage';
 import { SettingsPage } from '@/pages/settings/SettingsPage';
 import { AboutPage } from '@/pages/about/AboutPage';
 
-const LodgeDevHarness = lazy(() => import('@/games/lodge/dev/LodgeDevHarness'));
+const LodgeDevHarness = lazy(() => import('@/games/lodge/dev/LodgeDevEntry'));
 
 function NotFound() {
   return (
