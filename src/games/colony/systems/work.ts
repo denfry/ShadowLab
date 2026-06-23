@@ -1,5 +1,5 @@
 import { clamp } from '@/core/utils';
-import type { Building, Colonist, ColonyState, Tile } from '../domain/types';
+import type { Building, Colonist, ColonyState } from '../domain/types';
 import { grantXp, skillMultiplier } from '../domain/skills';
 import { TRAITS } from '../domain/traits';
 import {
@@ -7,7 +7,7 @@ import {
   RESEARCH_BASE, STORAGE_CAPACITY_BONUS, TAILOR_BASE,
   WOODCUT_BASE, XP_PER_WORK_TICK,
 } from '../data/balance';
-import { tileAt } from './grid';
+import { fertilityAt, tempAt, nodeAt, depleteNode, setBiome, setBuildingId, setPassable } from './grid';
 import { coldWorkFactor } from './needs';
 
 const workSpeed = (c: Colonist): number =>
@@ -47,9 +47,8 @@ export function runWork(s: ColonyState): void {
       grantXp(c.skills.building, XP_PER_WORK_TICK);
       if (building.buildProgress >= building.buildRequired) {
         building.built = true;
-        const t = tileAt(building.tile.x, building.tile.y, s.map);
-        if (t) t.buildingId = building.id;
-        if (building.type === 'wall' && t) t.passable = false;
+        setBuildingId(s.map, building.tile.x, building.tile.y, building.id);
+        if (building.type === 'wall') setPassable(s.map, building.tile.x, building.tile.y, false);
         applyStorageCapacity(s);
         s.log.push({ day: s.day, text: `Построено: ${building.type}.`, tone: 'good' });
         finishWork(c);
@@ -60,10 +59,9 @@ export function runWork(s: ColonyState): void {
     // Производство в здании.
     if (building && building.built) {
       if (building.jobType === 'farm') {
-        const t = tileAt(building.tile.x, building.tile.y, s.map);
-        if (!t || t.temp <= FARM_FREEZE_TEMP) { /* мёрзлая земля — ничего */ }
+        if (tempAt(s.map, building.tile.x, building.tile.y) <= FARM_FREEZE_TEMP) { /* мёрзлая земля — ничего */ }
         else {
-          const fert = 0.5 + t.fertility;
+          const fert = 0.5 + fertilityAt(s.map, building.tile.x, building.tile.y);
           addResource(s, 'food', FARM_BASE * skillMultiplier(c.skills.farming.level) * workSpeed(c) * fert * cf);
           grantXp(c.skills.farming, XP_PER_WORK_TICK);
         }
@@ -84,16 +82,16 @@ export function runWork(s: ColonyState): void {
 
     // Рубка леса на тайле-цели.
     if (!building && c.targetTile) {
-      const t: Tile | undefined = tileAt(c.targetTile.x, c.targetTile.y, s.map);
-      if (t && t.terrain === 'forest' && (t.wood ?? 0) > 0) {
-        const take = Math.min(t.wood!, WOODCUT_BASE * skillMultiplier(c.skills.woodcutting.level) * workSpeed(c) * cf);
-        t.wood! -= take;
-        addResource(s, 'wood', take);
+      const tx = c.targetTile.x, ty = c.targetTile.y;
+      const node = nodeAt(s.map, tx, ty);
+      if (node && node.kind === 'wood' && node.amount > 0) {
+        const want = WOODCUT_BASE * skillMultiplier(c.skills.woodcutting.level) * workSpeed(c) * cf;
+        const took = depleteNode(s.map, tx, ty, want);
+        addResource(s, 'wood', took);
         grantXp(c.skills.woodcutting, XP_PER_WORK_TICK);
-        if (t.wood! <= 0) {
-          t.terrain = 'grass';
-          t.wood = undefined;
-          finishWork(c); // делянка кончилась
+        if (!nodeAt(s.map, tx, ty)) {     // делянка кончилась
+          setBiome(s.map, tx, ty, 'grass');
+          finishWork(c);
         }
       } else {
         finishWork(c); // цель невалидна
