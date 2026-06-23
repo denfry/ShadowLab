@@ -27,6 +27,9 @@ export default {
         sans: ['"IBM Plex Sans"', 'system-ui', 'sans-serif'],
       },
       boxShadow: {
+        e1: '0 1px 0 rgb(255 255 255 / 0.03), 0 12px 30px -18px rgb(0 0 0 / 0.85)',
+        e2: '0 0 0 1px rgb(var(--accent) / 0.18), 0 0 28px -12px rgb(var(--accent) / 0.55), 0 18px 40px -26px rgb(0 0 0 / 0.85)',
+        e3: 'inset 0 1px 0 rgb(255 255 255 / 0.05), 0 0 60px -22px rgb(var(--accent) / 0.6), 0 30px 60px -30px rgb(0 0 0 / 0.9)',
         glow: '0 0 0 1px rgb(var(--accent) / 0.35), 0 0 30px -6px rgb(var(--accent) / 0.55)',
         'glow-2': '0 0 0 1px rgb(var(--accent-2) / 0.35), 0 0 30px -6px rgb(var(--accent-2) / 0.55)',
         panel: '0 18px 50px -25px rgb(0 0 0 / 0.8)',
@@ -52,12 +55,22 @@ export default {
           '0%, 100%': { transform: 'translateY(0)' },
           '50%': { transform: 'translateY(-8px)' },
         },
+        shimmer: {
+          '0%': { backgroundPosition: '-200% 0' },
+          '100%': { backgroundPosition: '200% 0' },
+        },
+        drift: {
+          '0%, 100%': { transform: 'translate3d(0,0,0)' },
+          '50%': { transform: 'translate3d(2%, -2%, 0)' },
+        },
       },
       animation: {
         'fade-up': 'fade-up 0.6s cubic-bezier(0.22, 1, 0.36, 1) both',
         'pulse-glow': 'pulse-glow 3.5s ease-in-out infinite',
         scan: 'scan 6s linear infinite',
         float: 'float 6s ease-in-out infinite',
+        shimmer: 'shimmer 1.6s linear infinite',
+        drift: 'drift 18s ease-in-out infinite',
       },
     },
   },

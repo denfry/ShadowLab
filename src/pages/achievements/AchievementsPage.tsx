@@ -28,7 +28,7 @@ export function AchievementsPage() {
     <div>
       <SectionTitle eyebrow="прогресс" title="Достижения" />
 
-      <div className="panel mb-6 flex flex-wrap items-center gap-6 p-5">
+      <div className="panel-glass mb-6 flex flex-wrap items-center gap-6 p-5">
         <div>
           <p className="font-display text-3xl text-ink">
             {points.earned}
@@ -45,16 +45,16 @@ export function AchievementsPage() {
         </div>
       </div>
 
-      <div className="mb-5 flex flex-wrap gap-2">
+      <div className="mb-5 inline-flex flex-wrap gap-1 rounded-xl border border-edge/60 bg-panel/40 p-1">
         {TABS.map((t) => (
           <button
             key={t.key}
             onClick={() => setTab(t.key)}
+            aria-pressed={tab === t.key}
             className={cx(
-              'rounded-xl border px-4 py-2 font-display text-sm tracking-wide transition-all',
-              tab === t.key
-                ? 'border-accent/50 bg-accent/10 text-accent'
-                : 'border-edge/60 text-muted hover:text-ink',
+              'rounded-lg px-4 py-1.5 font-display text-sm tracking-wide transition-all',
+              'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/60',
+              tab === t.key ? 'bg-accent/15 text-accent shadow-e1' : 'text-muted hover:text-ink',
             )}
           >
             {t.label}

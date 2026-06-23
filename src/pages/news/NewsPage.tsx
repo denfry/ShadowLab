@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { NewsService, type NewsPost } from '@/services/news/NewsService';
 import { SectionTitle } from '@/ui/primitives/SectionTitle';
+import { Tag } from '@/ui/primitives/Tag';
+import { Skeleton } from '@/ui/feedback/Skeleton';
 
 export function NewsPage() {
   const { slug } = useParams<{ slug?: string }>();
@@ -24,7 +26,23 @@ export function NewsPage() {
     }
   }, [slug]);
 
-  if (loading) return <p className="panel p-6 text-muted">Загрузка…</p>;
+  if (loading)
+    return slug ? (
+      <div className="mx-auto max-w-3xl space-y-4">
+        <Skeleton className="h-5 w-24" />
+        <Skeleton className="h-9 w-2/3" />
+        <Skeleton className="h-40" />
+      </div>
+    ) : (
+      <div>
+        <SectionTitle eyebrow="журнал" title="Новости и патчноуты" />
+        <div className="grid gap-3">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <Skeleton key={i} className="h-24" />
+          ))}
+        </div>
+      </div>
+    );
 
   if (slug) {
     if (!article)
@@ -42,11 +60,11 @@ export function NewsPage() {
           ← новости
         </Link>
         <div className="mt-4 flex items-center gap-3">
-          <span className="chip">{article.tag}</span>
+          <Tag tone="accent">{article.tag}</Tag>
           <span className="font-mono text-xs text-muted">{article.date.slice(0, 10)}</span>
         </div>
         <h1 className="mt-3 font-display text-3xl font-bold text-ink neon-text">{article.title}</h1>
-        <div className="mt-6 space-y-4 leading-relaxed text-muted">
+        <div className="panel-glass mt-6 space-y-4 p-6 leading-relaxed text-muted">
           {article.body.map((para, i) => (
             <p key={i}>{para}</p>
           ))}
@@ -66,7 +84,7 @@ export function NewsPage() {
             className="panel p-5 transition-all hover:border-accent/40"
           >
             <div className="flex items-center gap-3">
-              <span className="chip">{post.tag}</span>
+              <Tag tone="accent">{post.tag}</Tag>
               <span className="ml-auto font-mono text-[0.65rem] text-muted">{post.date.slice(0, 10)}</span>
             </div>
             <h3 className="mt-3 font-display text-lg text-ink">{post.title}</h3>

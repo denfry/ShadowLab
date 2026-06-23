@@ -8,9 +8,7 @@ import { createColony } from './domain/createColony';
 import { WorldScene } from './scenes/WorldScene';
 import { ColonyHud } from './ui/ColonyHud';
 
-/** Colony Evolution is canvas-first: mount() boots a Phaser game running the
- *  simulation; the React HUD overlay sends commands and reads projected state. */
-const COLONY_PAYLOAD_VERSION = 2;
+const COLONY_PAYLOAD_VERSION = 4;
 
 export const colonyModule: GameModule = {
   definition: COLONY_DEFINITION,
@@ -20,7 +18,6 @@ export const colonyModule: GameModule = {
     let state: ColonyState | null = null;
     if (ctx.mode === 'load') {
       const loaded = (await ctx.save.load(ctx.slot)) as ColonyState | null;
-      // Reject incompatible older payloads (e.g. pre-tech-tree saves).
       if (loaded && loaded.version === COLONY_PAYLOAD_VERSION) state = loaded;
     }
     if (!state) state = createColony(randomSeed());
@@ -33,19 +30,12 @@ export const colonyModule: GameModule = {
       render: { antialias: true, pixelArt: false },
       scene: [],
     });
-
     game.scene.add('world', WorldScene, true, { state, ctx });
 
     return {
-      pause() {
-        game.scene.getScene('world')?.scene.pause();
-      },
-      resume() {
-        game.scene.getScene('world')?.scene.resume();
-      },
-      destroy() {
-        game.destroy(true);
-      },
+      pause() { game.scene.getScene('world')?.scene.pause(); },
+      resume() { game.scene.getScene('world')?.scene.resume(); },
+      destroy() { game.destroy(true); },
     };
   },
 

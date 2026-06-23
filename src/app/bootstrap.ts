@@ -6,6 +6,9 @@ import { useSettingsStore } from '@/stores/useSettingsStore';
 import { useProfileStore } from '@/stores/useProfileStore';
 import { useAchievementStore } from '@/stores/useAchievementStore';
 import { useToastStore } from '@/stores/useToastStore';
+import { useAuthStore } from '@/stores/useAuthStore';
+import { isCloudConfigured } from '@/services/supabase/client';
+import { CloudSync } from '@/services/cloud/CloudSync';
 
 /**
  * One-time portal bootstrap: register the game catalog, load persisted save
@@ -31,4 +34,12 @@ export async function bootstrapApp(): Promise<void> {
     const s = useSettingsStore.getState();
     if (!s.reducedMotion) s.set('reducedMotion', true);
   }
+
+  // Drive cloud sync from auth changes (listener must exist before init() emits).
+  if (isCloudConfigured()) {
+    appBus.on('auth:change', ({ userId }) => void CloudSync.onAuthChange(userId));
+  }
+
+  // Initialize auth last; sets 'guest' when cloud is unconfigured.
+  useAuthStore.getState().init();
 }

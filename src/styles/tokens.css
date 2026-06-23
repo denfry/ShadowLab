@@ -3,13 +3,13 @@
 
 :root,
 [data-theme='portal'] {
-  --bg: 10 14 26; /* #0a0e1a */
-  --bg-2: 6 9 18;
-  --panel: 18 24 41; /* #121829 */
-  --panel-2: 24 32 54;
-  --edge: 38 50 82;
-  --ink: 226 232 240;
-  --muted: 138 152 178;
+  --bg: 8 11 20; /* deeper sine-black blue */
+  --bg-2: 5 7 14;
+  --panel: 16 21 38;
+  --panel-2: 22 29 50;
+  --edge: 40 54 92; /* slightly brighter for crisper definition */
+  --ink: 233 239 248;
+  --muted: 132 146 176;
   --accent: 0 229 255; /* cyan */
   --accent-2: 255 45 126; /* magenta */
   --good: 52 211 153;
