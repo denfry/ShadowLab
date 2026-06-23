@@ -58,6 +58,7 @@ export const SPRITE_TEX = {
   berry:    'col-spr-berry',
   colonist: 'col-spr-colonist',
   shadow:   'col-spr-shadow',
+  building: 'col-spr-building',
 };
 
 /**
@@ -182,6 +183,16 @@ export function buildSpriteTextures(scene: Phaser.Scene, tilePx: number): void {
     const ey = Math.round(h * 0.26);
     g.fillCircle(Math.round(s * 0.44), ey, Math.round(s * 0.04));
     g.fillCircle(Math.round(s * 0.56), ey, Math.round(s * 0.04));
+  });
+
+  // --- building: square footprint + peaked roof (architecture glyph, not a person) ---
+  mk(SPRITE_TEX.building, s, s, () => {
+    // Footprint: filled square body
+    g.fillStyle(0xffffff, 1); g.fillRect(s * 0.18, s * 0.40, s * 0.64, s * 0.46);
+    g.lineStyle(Math.max(1, s * 0.04), 0x1b1b16, 0.9); g.strokeRect(s * 0.18, s * 0.40, s * 0.64, s * 0.46);
+    // Peaked roof triangle
+    g.fillStyle(0xe8e8e0, 1);
+    g.beginPath(); g.moveTo(s * 0.12, s * 0.42); g.lineTo(s * 0.5, s * 0.14); g.lineTo(s * 0.88, s * 0.42); g.closePath(); g.fillPath();
   });
 
   g.destroy();

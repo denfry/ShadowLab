@@ -186,10 +186,8 @@ export class SpriteLayer {
         const wx = b.tile.x * TILE + TILE * 0.5;
         const wy = b.tile.y * TILE + TILE * 0.5;
         const color = BUILDING_COLOR[b.type] ?? 0xaaaaaa;
-        // Use colonist texture as a base shape, tinted by building color.
-        // (Buildings are small markers; a proper building sprite atlas is
-        //  out of scope for Plan C.)
-        this.drawSpriteWithShadow(wx, wy, SPRITE_TEX.colonist, color, 1.1, 0.7);
+        // Use dedicated building marker texture (house glyph), tinted by building color.
+        this.drawSpriteWithShadow(wx, wy, SPRITE_TEX.building, color, 1, 1);
       }
 
       // 3. Colonist sprites.
