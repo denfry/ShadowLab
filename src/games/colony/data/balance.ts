@@ -129,3 +129,5 @@ export const GEN = {
 export const BIOME_FERTILITY: Record<Biome, number> = {
   water: 0, marsh: 0.25, meadow: 0.85, grass: 0.5, forest: 0.55, rock: 0.15, mountain: 0,
 };
+
+export const PATH_LEN_BOUND_K = 1.6; // тест: длина иерархического пути <= K * оптимум
