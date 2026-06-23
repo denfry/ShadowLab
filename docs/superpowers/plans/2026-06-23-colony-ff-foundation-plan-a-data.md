@@ -384,10 +384,10 @@ git commit -m "feat(colony): grid accessor seam (read/write/iter/findNearestNode
 
 - [ ] **Step 1: Добавить параметры в `balance.ts`**
 
-Добавить в конец файла (импорт `Biome`, `NodeKind` сверху — дополнить существующий импорт типов):
+Дополнить существующий импорт типов сверху файла: добавить `Biome` к импорту из `../domain/types` (рядом с уже импортируемыми `BuildingType, JobType, ResourceId`):
 
 ```ts
-import type { Biome, NodeKind } from '../domain/types';
+import type { Biome } from '../domain/types';
 
 // ---- Генерация мира (План A: 28²; План B поднимет MAP до 256) ----
 export const GEN = {
@@ -410,12 +410,7 @@ export const GEN = {
 export const BIOME_FERTILITY: Record<Biome, number> = {
   water: 0, marsh: 0.25, meadow: 0.85, grass: 0.5, forest: 0.55, rock: 0.15, mountain: 0,
 };
-
-export const NODE_FOR_BIOME_NOTE = 'см. worldgen.ts — размещение узлов по биому/высоте';
-void (null as unknown as NodeKind); // подсказка типов; удалить, если линтер ругается
 ```
-
-> Примечание: строку `void (null …)` оставлять не нужно — она лишь фиксирует импорт `NodeKind`, если он не используется иначе. Если `NodeKind` не нужен в balance — убрать из импорта и удалить эту строку.
 
 - [ ] **Step 2: Проверка компиляции**
 
@@ -1528,9 +1523,10 @@ Run (Git Bash):
 ```bash
 grep -rn "map.tiles\[" src/games/colony/systems src/games/colony/domain | grep -v "grid.ts"
 ```
-Expected: пусто (или только `forEachTile`/`save.ts` оверрайды по индексу `map.tiles[i]`, что допустимо как сериализация). Прямых `.terrain`/`.wood` быть не должно:
+Expected: пусто (или только `forEachTile`/`save.ts` оверрайды по индексу `map.tiles[i]`, что допустимо как сериализация). Поля `terrain`/`wood` тайла удалены — прямых обращений быть не должно (греп ниже не должен ловить легитимный `resources.wood`):
 ```bash
-grep -rn "\.terrain\|\.wood\b" src/games/colony
+grep -rn "\.terrain\b" src/games/colony
+grep -rnE "\b(t|tile|ct|wt)\.wood\b" src/games/colony
 ```
 Expected: пусто.
 
