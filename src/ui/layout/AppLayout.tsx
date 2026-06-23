@@ -1,9 +1,10 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useLocation, useOutlet } from 'react-router-dom';
-import { AnimatePresence, motion } from 'framer-motion';
+import { AnimatePresence, MotionConfig, motion } from 'framer-motion';
 import { Header } from './Header';
 import { Sidebar } from './Sidebar';
 import { usePageTheme } from '@/ui/hooks/usePageTheme';
+import { useMotionAllowed } from '@/ui/hooks/useMotionAllowed';
 
 export function AppLayout() {
   const [drawerOpen, setDrawerOpen] = useState(false);
@@ -11,7 +12,14 @@ export function AppLayout() {
   const outlet = useOutlet();
   usePageTheme('portal');
 
+  // Single source of truth for ambient motion: drives a root attribute that CSS honors.
+  const allowMotion = useMotionAllowed();
+  useEffect(() => {
+    document.documentElement.dataset.reducedMotion = allowMotion ? 'false' : 'true';
+  }, [allowMotion]);
+
   return (
+    <MotionConfig reducedMotion={allowMotion ? 'never' : 'always'}>
     <div className="min-h-screen">
       <Header onMenu={() => setDrawerOpen(true)} />
 
@@ -44,14 +52,18 @@ export function AppLayout() {
           )}
         </AnimatePresence>
 
-        <main className="min-w-0 flex-1 px-4 py-6 md:px-8 md:py-10">
+        <main className="relative min-w-0 flex-1 px-4 py-6 md:px-8 md:py-10">
+          <div
+            aria-hidden
+            className="pointer-events-none absolute inset-0 -z-10 animate-drift opacity-60 [background:radial-gradient(40%_30%_at_80%_0%,rgb(var(--accent-2)/0.06),transparent_70%)]"
+          />
           <AnimatePresence mode="wait">
             <motion.div
               key={location.pathname}
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -6 }}
-              transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
+              transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
             >
               {outlet}
             </motion.div>
@@ -59,5 +71,6 @@ export function AppLayout() {
         </main>
       </div>
     </div>
+    </MotionConfig>
   );
 }

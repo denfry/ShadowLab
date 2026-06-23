@@ -3,7 +3,7 @@ import { SectionTitle } from '@/ui/primitives/SectionTitle';
 export function AboutPage() {
   return (
     <div className="mx-auto max-w-3xl space-y-10">
-      <section className="scanlines relative overflow-hidden rounded-3xl border border-edge/60 bg-panel/40 p-8">
+      <section className="hero-surface scanlines p-8">
         <h1 className="font-display text-3xl font-bold text-ink neon-text">Denfry / ShadowLab Games</h1>
         <p className="mt-3 text-muted">
           Независимая игровая лаборатория. Портал запускает игры прямо в браузере на единой
@@ -21,7 +21,7 @@ export function AboutPage() {
             ['Игры', 'Phaser 3 · ECS-lite системы'],
             ['Данные', 'localStorage → IndexedDB → Supabase (v1.0)'],
           ].map(([k, v]) => (
-            <div key={k} className="panel-inset p-4">
+            <div key={k} className="panel-inset p-4 shadow-e1">
               <p className="label-mono mb-1">{k}</p>
               <p className="font-mono text-sm text-ink">{v}</p>
             </div>
@@ -29,7 +29,7 @@ export function AboutPage() {
         </div>
       </section>
 
-      <section className="panel border-warn/40 p-6">
+      <section className="panel-glass border-warn/40 p-6">
         <p className="label-mono mb-2 text-warn">Дисклеймер · Shadow Trace</p>
         <p className="text-sm leading-relaxed text-muted">
           Все данные, имена, сообщения и логи в детективной игре Shadow Trace полностью вымышлены и

@@ -19,7 +19,7 @@ export interface Effect {
 }
 export type Grant = Effect;
 
-export type FactRef = { type: 'statement' | 'evidence' | 'metadata'; refId: string };
+export type FactRef = { type: 'statement' | 'evidence' | 'metadata' | 'hotspot'; refId: string };
 /** Forward-use: consumed by the dossier `Fact.time` model added in Этап 1 (UI layer). */
 export type TimeSpan = { start?: string; end?: string };
 
@@ -139,6 +139,7 @@ export interface CaseProgressV2 {
   caseId: string;
   openNodes: string[];
   visitedNodes: string[];
+  inspectedHotspots: string[];
   discoveredEvidence: string[];
   discoveredStatements: string[];
   flags: Record<string, boolean | number | string>;
@@ -153,6 +154,7 @@ export type Rank = 'F' | 'C' | 'B' | 'A' | 'S';
 
 export interface DeductionResultV2 {
   rank: Rank;
+  score: number;
   contradictionsFound: number;
   contradictionsTotal: number;
   correctLinks: number;
@@ -161,6 +163,17 @@ export interface DeductionResultV2 {
   fakesTotal: number;
   accusationQuality: EndingQuality;
   flagsForCampaign: string[];
+}
+
+/** A derived dossier card: one atomic fact the player has learned. Its `source`
+ *  doubles as a FactRef the board's addLink consumes. */
+export interface Fact {
+  id: string;
+  source: FactRef;
+  text: string;
+  subjectIds: string[];
+  time?: TimeSpan;
+  place?: string;
 }
 
 // ---- campaign (type-only; consumers arrive in Этап 3) ----

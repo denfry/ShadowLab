@@ -31,7 +31,7 @@ export function Modal({ open, onClose, title, children, className }: ModalProps)
           <motion.div
             role="dialog"
             aria-modal="true"
-            className={cx('panel relative z-10 w-full max-w-lg p-6 shadow-panel', className)}
+            className={cx('panel-glass relative z-10 w-full max-w-lg p-6 shadow-e3', className)}
             initial={{ scale: 0.94, y: 12, opacity: 0 }}
             animate={{ scale: 1, y: 0, opacity: 1 }}
             exit={{ scale: 0.96, y: 8, opacity: 0 }}

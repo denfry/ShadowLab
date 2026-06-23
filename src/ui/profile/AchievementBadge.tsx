@@ -15,7 +15,7 @@ export function AchievementBadge({ def, progress }: AchievementBadgeProps) {
   return (
     <div
       className={cx(
-        'panel relative flex gap-3 p-4 transition-all',
+        'panel relative flex gap-3 p-4 shadow-e1 transition-all',
         progress.unlocked ? 'border-accent/40 shadow-glow' : 'opacity-90 hover:opacity-100',
       )}
     >
