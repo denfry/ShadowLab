@@ -5,10 +5,11 @@ import { randomSeed } from '@/core/utils/rng';
 import { COLONY_DEFINITION } from './definition';
 import type { ColonyState } from './domain/types';
 import { createColony } from './domain/createColony';
+import { toSave, fromSave, type ColonySave } from './domain/save';
 import { WorldScene } from './scenes/WorldScene';
 import { ColonyHud } from './ui/ColonyHud';
 
-const COLONY_PAYLOAD_VERSION = 4;
+const COLONY_PAYLOAD_VERSION = 5;
 
 export const colonyModule: GameModule = {
   definition: COLONY_DEFINITION,
@@ -17,8 +18,8 @@ export const colonyModule: GameModule = {
   async mount(container: HTMLElement, ctx: GameContext): Promise<GameInstance> {
     let state: ColonyState | null = null;
     if (ctx.mode === 'load') {
-      const loaded = (await ctx.save.load(ctx.slot)) as ColonyState | null;
-      if (loaded && loaded.version === COLONY_PAYLOAD_VERSION) state = loaded;
+      const loaded = (await ctx.save.load(ctx.slot)) as ColonySave | null;
+      if (loaded && loaded.version === COLONY_PAYLOAD_VERSION) state = fromSave(loaded);
     }
     if (!state) state = createColony(randomSeed());
 

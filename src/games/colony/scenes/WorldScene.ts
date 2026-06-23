@@ -6,6 +6,7 @@ import { tick, alive } from '../systems/tick';
 import { computeHud } from '../systems/projection';
 import { placeBlueprint, canPlace } from '../systems/build';
 import { createColony } from '../domain/createColony';
+import { toSave } from '../domain/save';
 import { randomSeed } from '@/core/utils/rng';
 
 const TERRAIN_COLOR: Record<string, number> = {
@@ -226,7 +227,7 @@ export class WorldScene extends Phaser.Scene {
     this.ctx.achievements.progress('colony.population_20', pop);
     this.ctx.records.set('colony.bestDay', s.day, 'max');
     this.ctx.records.set('colony.bestPop', pop, 'max');
-    this.ctx.save.autosave(s, `День ${s.day} · ${pop} жит.`);
+    this.ctx.save.autosave(toSave(s), `День ${s.day} · ${pop} жит.`);
 
     if (s.flags.gameOver) {
       if (s.flags.victory) this.ctx.records.set('colony.victories', 1, 'inc');

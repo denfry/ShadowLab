@@ -5,7 +5,7 @@ import { computeHud } from '@/games/colony/systems/projection';
 describe('phase 1 model migration', () => {
   it('initializes env, rooms, stock and tailorProgress', () => {
     const s = createColony(1);
-    expect(s.version).toBe(4);
+    expect(s.version).toBe(5);
     expect(s.env.season).toBe('spring');
     expect(s.rooms).toEqual([]);
     expect(s.roomSig).toBe('');
