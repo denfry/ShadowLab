@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { createMap, setPassable } from '@/games/colony/systems/grid';
-import { detectPortals, clusterIdOf } from '@/games/colony/systems/pathHierarchy';
+import { detectPortals, clusterIdOf, buildNav, localDistance } from '@/games/colony/systems/pathHierarchy';
 
 describe('portals', () => {
   it('an open 32x32 map yields one portal per border segment between adjacent clusters', () => {
@@ -25,5 +25,26 @@ describe('portals', () => {
     for (let y = 0; y < 16; y++) { setPassable(m, 15, y, false); setPassable(m, 16, y, false); }
     const { portals } = detectPortals(m, 16);
     expect(portals.length).toBe(0);
+  });
+});
+
+describe('intra-cluster distances + buildNav', () => {
+  it('intra-cluster distance equals constrained path length', () => {
+    const m = createMap(16, 16); // single cluster
+    expect(localDistance(m, 0, 16, 1, { x: 0, y: 0 }, { x: 5, y: 0 })).toBe(5);
+    for (let y = 0; y < 15; y++) setPassable(m, 8, y, false); // wall with gap at bottom
+    const d = localDistance(m, 0, 16, 1, { x: 0, y: 0 }, { x: 15, y: 0 })!;
+    expect(d).toBeGreaterThan(15); // must detour around the wall
+  });
+  it('buildNav assembles portals + intra edges and is internally consistent', () => {
+    const m = createMap(32, 32);
+    const nav = buildNav(m, 16);
+    expect(nav.portals.length).toBe(8);
+    // every portal that shares a cluster with another has an intra edge to it
+    for (const p of nav.portals) {
+      const mates = (nav.portalsByCluster.get(p.cluster) ?? []).filter((q) => q.id !== p.id);
+      const intra = nav.intraEdges.get(p.id) ?? [];
+      expect(intra.length).toBe(mates.length);
+    }
   });
 });

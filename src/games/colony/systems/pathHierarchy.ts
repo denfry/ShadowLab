@@ -1,5 +1,5 @@
 import type { Pt } from '../domain/types';
-import { type ColonyMap, passableAt } from './grid';
+import { type ColonyMap, passableAt, neighbors4 } from './grid';
 
 export interface Portal { id: number; x: number; y: number; cluster: number; }
 export interface Nav {
@@ -61,6 +61,63 @@ export function detectPortals(m: ColonyMap, clusterSize: number) {
     }
   }
   return { portals, portalsByCluster, interEdges, clustersW, clustersH };
+}
+
+/** A* в пределах окна кластера; возвращает длину пути в шагах или null. */
+export function localDistance(
+  m: ColonyMap, cluster: number, clusterSize: number, clustersW: number, a: Pt, b: Pt,
+): number | null {
+  if (a.x === b.x && a.y === b.y) return 0;
+  const cx = (cluster % clustersW) * clusterSize, cy = Math.floor(cluster / clustersW) * clusterSize;
+  const x1 = Math.min(m.w, cx + clusterSize), y1 = Math.min(m.h, cy + clusterSize);
+  const inWin = (x: number, y: number) => x >= cx && y >= cy && x < x1 && y < y1;
+  const key = (x: number, y: number) => y * m.w + x;
+  const h = (x: number, y: number) => Math.abs(x - b.x) + Math.abs(y - b.y);
+  const open: Array<{ k: number; x: number; y: number; f: number }> = [{ k: key(a.x, a.y), x: a.x, y: a.y, f: h(a.x, a.y) }];
+  const g = new Map<number, number>([[key(a.x, a.y), 0]]);
+  const closed = new Set<number>();
+  while (open.length) {
+    let bi = 0; for (let i = 1; i < open.length; i++) if (open[i].f < open[bi].f) bi = i;
+    const cur = open.splice(bi, 1)[0];
+    if (cur.x === b.x && cur.y === b.y) return g.get(cur.k)!;
+    if (closed.has(cur.k)) continue; closed.add(cur.k);
+    const cg = g.get(cur.k)!;
+    for (const n of neighbors4(cur.x, cur.y, m)) {
+      if (!inWin(n.x, n.y)) continue;
+      const isTarget = n.x === b.x && n.y === b.y;
+      if (!isTarget && !passableAt(m, n.x, n.y)) continue;
+      const nk = key(n.x, n.y);
+      const t = cg + 1;
+      if (t < (g.get(nk) ?? Infinity)) {
+        g.set(nk, t);
+        open.push({ k: nk, x: n.x, y: n.y, f: t + h(n.x, n.y) });
+      }
+    }
+  }
+  return null;
+}
+
+export function buildNav(m: ColonyMap, clusterSize: number): Nav {
+  const { portals, portalsByCluster, interEdges, clustersW, clustersH } = detectPortals(m, clusterSize);
+  const intraEdges = new Map<number, Array<{ to: number; cost: number }>>();
+  for (const [cluster, ps] of portalsByCluster) {
+    for (let i = 0; i < ps.length; i++) {
+      for (let j = i + 1; j < ps.length; j++) {
+        const d = localDistance(m, cluster, clusterSize, clustersW, ps[i], ps[j]);
+        if (d === null) continue;
+        (intraEdges.get(ps[i].id) ?? setGet(intraEdges, ps[i].id)).push({ to: ps[j].id, cost: d });
+        (intraEdges.get(ps[j].id) ?? setGet(intraEdges, ps[j].id)).push({ to: ps[i].id, cost: d });
+      }
+    }
+  }
+  return {
+    clusterSize, clustersW, clustersH,
+    portals, portalsByCluster, interEdges, intraEdges,
+    pathCache: new Map(), dirty: new Set(),
+  };
+}
+function setGet(map: Map<number, Array<{ to: number; cost: number }>>, k: number) {
+  const a: Array<{ to: number; cost: number }> = []; map.set(k, a); return a;
 }
 
 /** Находит макс. сегменты, где open(i)==true на [lo,hi); вызывает emit(середина сегмента). */
