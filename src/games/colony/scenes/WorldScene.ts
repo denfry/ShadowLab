@@ -5,10 +5,11 @@ import { TILE } from '../data/balance';
 import { tick, alive } from '../systems/tick';
 import { computeHud } from '../systems/projection';
 import { placeBlueprint, canPlace } from '../systems/build';
-import { forEachTile, biomeAt, tempAt } from '../systems/grid';
+import { biomeAt, tempAt } from '../systems/grid';
 import { createColony } from '../domain/createColony';
 import { toSave } from '../domain/save';
 import { randomSeed } from '@/core/utils/rng';
+import { visibleTileRange, clampScroll } from './cameraMath';
 
 const BIOME_COLOR: Record<string, number> = {
   water: 0x1d4256, marsh: 0x3b4a2c, meadow: 0x4f7d33, grass: 0x223018,
@@ -26,6 +27,10 @@ const TASK_COLOR: Record<string, number> = {
   sleep: 0x6aa0ff, goto_sleep: 0x9ab8ff, idle: 0x8aa884,
 };
 
+const MIN_ZOOM = 0.4;
+const MAX_ZOOM = 3.0;
+const PAN_SPEED = 8; // world-px per frame at zoom=1
+
 interface Dot { go: Phaser.GameObjects.Arc; ref: Colonist; }
 
 export class WorldScene extends Phaser.Scene {
@@ -37,6 +42,7 @@ export class WorldScene extends Phaser.Scene {
   private dots: Dot[] = [];
   private mapPxW = 0;
   private mapPxH = 0;
+  private mapLayer!: Phaser.GameObjects.Graphics;
   private buildingLayer!: Phaser.GameObjects.Container;
   private dotLayer!: Phaser.GameObjects.Container;
   private tempLayer!: Phaser.GameObjects.Graphics;
@@ -44,6 +50,23 @@ export class WorldScene extends Phaser.Scene {
   private lastBuildSig = '';
   private placingType: BuildingType | null = null;
   private ghost!: Phaser.GameObjects.Rectangle;
+
+  // Camera pan/zoom state
+  private camScrollX = 0;
+  private camScrollY = 0;
+  private camZoom = 1;
+  private isDragging = false;
+  private dragStartX = 0;
+  private dragStartY = 0;
+  private dragScrollStartX = 0;
+  private dragScrollStartY = 0;
+  private cursors!: Phaser.Types.Input.Keyboard.CursorKeys;
+  private wasd!: {
+    up: Phaser.Input.Keyboard.Key;
+    down: Phaser.Input.Keyboard.Key;
+    left: Phaser.Input.Keyboard.Key;
+    right: Phaser.Input.Keyboard.Key;
+  };
 
   constructor() { super('world'); }
 
@@ -56,7 +79,10 @@ export class WorldScene extends Phaser.Scene {
     this.mapPxW = this.state.map.w * TILE;
     this.mapPxH = this.state.map.h * TILE;
     this.cameras.main.setBackgroundColor('#0d140c');
-    this.drawMap();
+
+    // Map layer — redrawn each frame (culled to visible tiles)
+    this.mapLayer = this.add.graphics();
+
     this.tempLayer = this.add.graphics();
     this.buildingLayer = this.add.container(0, 0);
     this.dotLayer = this.add.container(0, 0);
@@ -65,25 +91,69 @@ export class WorldScene extends Phaser.Scene {
     this.ghost = this.add.rectangle(0, 0, TILE, TILE, 0xffffff, 0.25).setVisible(false);
     this.ghost.setStrokeStyle(1, 0xffffff, 0.6);
 
-    this.fitCamera();
-    this.scale.on('resize', this.fitCamera, this);
+    // Keyboard input
+    this.cursors = this.input.keyboard!.createCursorKeys();
+    this.wasd = {
+      up: this.input.keyboard!.addKey(Phaser.Input.Keyboard.KeyCodes.W),
+      down: this.input.keyboard!.addKey(Phaser.Input.Keyboard.KeyCodes.S),
+      left: this.input.keyboard!.addKey(Phaser.Input.Keyboard.KeyCodes.A),
+      right: this.input.keyboard!.addKey(Phaser.Input.Keyboard.KeyCodes.D),
+    };
 
-    this.input.on('pointermove', this.onPointerMove, this);
+    // Pointer drag for panning
     this.input.on('pointerdown', this.onPointerDown, this);
+    this.input.on('pointermove', this.onPointerMove, this);
+    this.input.on('pointerup', this.onPointerUp, this);
+    this.input.on('pointerupoutside', this.onPointerUp, this);
 
+    // Wheel zoom
+    this.input.on('wheel', (_pointer: Phaser.Input.Pointer, _gos: unknown, _dx: number, dy: number) => {
+      const factor = dy > 0 ? 0.9 : 1.1;
+      this.camZoom = Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, this.camZoom * factor));
+    });
+
+    // Initial framing: center on first colonist or map center, zoom to fit
+    const startX = this.state.colonists[0]?.pos.x ?? this.state.map.w / 2;
+    const startY = this.state.colonists[0]?.pos.y ?? this.state.map.h / 2;
+    const cam = this.cameras.main;
+    // Choose a comfortable initial zoom (show ~30 tiles across)
+    this.camZoom = Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, cam.width / (30 * TILE)));
+    // Center scroll on start position
+    this.camScrollX = startX * TILE - (cam.width / this.camZoom) / 2;
+    this.camScrollY = startY * TILE - (cam.height / this.camZoom) / 2;
+    const clamped = clampScroll(this.camScrollX, this.camScrollY, this.camZoom,
+      cam.width, cam.height, this.mapPxW, this.mapPxH);
+    this.camScrollX = clamped.x;
+    this.camScrollY = clamped.y;
+
+    cam.setZoom(this.camZoom);
+    cam.setScroll(this.camScrollX, this.camScrollY);
+
+    this.scale.on('resize', this.onResize, this);
     this.ctx.events.on('ui:command', this.onCommand);
     this.ctx.events.emit('game:state', computeHud(this.state));
+
+    // Initial map draw
+    this.redrawMap();
   }
 
-  private drawMap() {
-    const g = this.add.graphics();
-    forEachTile(this.state.map, (_i, x, y) => {
-      const b = biomeAt(this.state.map, x, y) ?? 'grass';
-      g.fillStyle(BIOME_COLOR[b] ?? 0x222222, 1);
-      g.fillRect(x * TILE, y * TILE, TILE - 1, TILE - 1);
-    });
-    g.lineStyle(1, 0x000000, 0.15);
-    g.strokeRect(0, 0, this.mapPxW, this.mapPxH);
+  private redrawMap() {
+    const cam = this.cameras.main;
+    const r = visibleTileRange(
+      cam.scrollX, cam.scrollY, cam.zoom,
+      cam.width, cam.height,
+      TILE, this.state.map.w, this.state.map.h,
+    );
+    this.mapLayer.clear();
+    for (let y = r.y0; y <= r.y1; y++) {
+      for (let x = r.x0; x <= r.x1; x++) {
+        const b = biomeAt(this.state.map, x, y) ?? 'grass';
+        this.mapLayer.fillStyle(BIOME_COLOR[b] ?? 0x222222, 1);
+        this.mapLayer.fillRect(x * TILE, y * TILE, TILE - 1, TILE - 1);
+      }
+    }
+    this.mapLayer.lineStyle(1, 0x000000, 0.15);
+    this.mapLayer.strokeRect(0, 0, this.mapPxW, this.mapPxH);
   }
 
   private buildSig() {
@@ -110,13 +180,21 @@ export class WorldScene extends Phaser.Scene {
   private drawTempOverlay() {
     this.tempLayer.clear();
     if (!this.tempOverlay) return;
-    forEachTile(this.state.map, (_i, x, y) => {
-      // синий (холод) → красный (тепло), диапазон -20..30
-      const k = Math.max(0, Math.min(1, (tempAt(this.state.map, x, y) + 20) / 50));
-      const r = Math.floor(k * 255), b = Math.floor((1 - k) * 255);
-      this.tempLayer.fillStyle((r << 16) | (0x30 << 8) | b, 0.35);
-      this.tempLayer.fillRect(x * TILE, y * TILE, TILE - 1, TILE - 1);
-    });
+    const cam = this.cameras.main;
+    const r = visibleTileRange(
+      cam.scrollX, cam.scrollY, cam.zoom,
+      cam.width, cam.height,
+      TILE, this.state.map.w, this.state.map.h,
+    );
+    for (let y = r.y0; y <= r.y1; y++) {
+      for (let x = r.x0; x <= r.x1; x++) {
+        // синий (холод) → красный (тепло), диапазон -20..30
+        const k = Math.max(0, Math.min(1, (tempAt(this.state.map, x, y) + 20) / 50));
+        const r_ = Math.floor(k * 255), bl = Math.floor((1 - k) * 255);
+        this.tempLayer.fillStyle((r_ << 16) | (0x30 << 8) | bl, 0.35);
+        this.tempLayer.fillRect(x * TILE, y * TILE, TILE - 1, TILE - 1);
+      }
+    }
   }
 
   private spawnDots() {
@@ -131,11 +209,14 @@ export class WorldScene extends Phaser.Scene {
     }
   }
 
-  private fitCamera = () => {
+  private onResize = () => {
+    // Re-clamp scroll after resize so viewport stays inside world
     const cam = this.cameras.main;
-    const zoom = Math.min(cam.width / this.mapPxW, cam.height / this.mapPxH) * 0.92;
-    cam.setZoom(Math.max(0.5, zoom));
-    cam.centerOn(this.mapPxW / 2, this.mapPxH / 2);
+    const clamped = clampScroll(this.camScrollX, this.camScrollY, this.camZoom,
+      cam.width, cam.height, this.mapPxW, this.mapPxH);
+    this.camScrollX = clamped.x;
+    this.camScrollY = clamped.y;
+    cam.setScroll(this.camScrollX, this.camScrollY);
   };
 
   private worldToTile(px: number, py: number) {
@@ -143,18 +224,9 @@ export class WorldScene extends Phaser.Scene {
     return { x: Math.floor(p.x / TILE), y: Math.floor(p.y / TILE) };
   }
 
-  private onPointerMove = (p: Phaser.Input.Pointer) => {
-    if (!this.placingType) { this.ghost.setVisible(false); return; }
-    const t = this.worldToTile(p.x, p.y);
-    const ok = canPlace(this.state, t.x, t.y);
-    this.ghost.setPosition(t.x * TILE + TILE / 2, t.y * TILE + TILE / 2);
-    this.ghost.setFillStyle(ok ? 0x84de5a : 0xff5a5a, 0.3);
-    this.ghost.setVisible(true);
-  };
-
   private onPointerDown = (p: Phaser.Input.Pointer) => {
-    const t = this.worldToTile(p.x, p.y);
     if (this.placingType) {
+      const t = this.worldToTile(p.x, p.y);
       const res = placeBlueprint(this.state, this.placingType, t.x, t.y);
       if (!res.ok) this.ctx.events.emit('toast', { kind: 'warning', title: 'Стройка', message: res.reason });
       else this.ctx.achievements.unlock('colony.first_building');
@@ -163,14 +235,52 @@ export class WorldScene extends Phaser.Scene {
       this.ctx.events.emit('game:state', computeHud(this.state));
       return;
     }
-    // Иначе — выбор колониста рядом с кликом.
-    let best: Colonist | undefined; let bestD = 1.2;
-    for (const c of this.state.colonists) {
-      if (!c.alive) continue;
-      const d = Math.hypot(c.pos.x - t.x, c.pos.y - t.y);
-      if (d < bestD) { bestD = d; best = c; }
+    // Start drag-to-pan
+    this.isDragging = true;
+    this.dragStartX = p.x;
+    this.dragStartY = p.y;
+    this.dragScrollStartX = this.camScrollX;
+    this.dragScrollStartY = this.camScrollY;
+  };
+
+  private onPointerMove = (p: Phaser.Input.Pointer) => {
+    if (this.placingType) {
+      const t = this.worldToTile(p.x, p.y);
+      const ok = canPlace(this.state, t.x, t.y);
+      this.ghost.setPosition(t.x * TILE + TILE / 2, t.y * TILE + TILE / 2);
+      this.ghost.setFillStyle(ok ? 0x84de5a : 0xff5a5a, 0.3);
+      this.ghost.setVisible(true);
+      return;
     }
-    if (best) this.ctx.events.emit('colony:select', best.id);
+    if (!this.isDragging) { this.ghost.setVisible(false); return; }
+    // Pan: move scroll opposite to pointer delta, corrected for zoom
+    const dx = (p.x - this.dragStartX) / this.camZoom;
+    const dy = (p.y - this.dragStartY) / this.camZoom;
+    const cam = this.cameras.main;
+    const clamped = clampScroll(
+      this.dragScrollStartX - dx,
+      this.dragScrollStartY - dy,
+      this.camZoom, cam.width, cam.height, this.mapPxW, this.mapPxH,
+    );
+    this.camScrollX = clamped.x;
+    this.camScrollY = clamped.y;
+  };
+
+  private onPointerUp = (p: Phaser.Input.Pointer) => {
+    if (!this.isDragging) return;
+    this.isDragging = false;
+    // If pointer barely moved, treat as a colonist-select click
+    const dist = Math.hypot(p.x - this.dragStartX, p.y - this.dragStartY);
+    if (dist < 4) {
+      const t = this.worldToTile(p.x, p.y);
+      let best: Colonist | undefined; let bestD = 1.2;
+      for (const c of this.state.colonists) {
+        if (!c.alive) continue;
+        const d = Math.hypot(c.pos.x - t.x, c.pos.y - t.y);
+        if (d < bestD) { bestD = d; best = c; }
+      }
+      if (best) this.ctx.events.emit('colony:select', best.id);
+    }
   };
 
   private onCommand = (msg: { type: string; payload?: any }) => {
@@ -207,8 +317,28 @@ export class WorldScene extends Phaser.Scene {
       }
     }
 
+    // WASD / arrow key panning
+    const panStep = PAN_SPEED / this.camZoom;
+    const cam = this.cameras.main;
+    let panX = this.camScrollX;
+    let panY = this.camScrollY;
+    if (this.cursors.left.isDown || this.wasd.left.isDown) panX -= panStep;
+    if (this.cursors.right.isDown || this.wasd.right.isDown) panX += panStep;
+    if (this.cursors.up.isDown || this.wasd.up.isDown) panY -= panStep;
+    if (this.cursors.down.isDown || this.wasd.down.isDown) panY += panStep;
+
+    // Apply zoom + clamped scroll to Phaser camera
+    const clamped = clampScroll(panX, panY, this.camZoom, cam.width, cam.height, this.mapPxW, this.mapPxH);
+    this.camScrollX = clamped.x;
+    this.camScrollY = clamped.y;
+    cam.setZoom(this.camZoom);
+    cam.setScroll(this.camScrollX, this.camScrollY);
+
+    // Redraw culled map + temp overlay every frame
+    this.redrawMap();
     this.syncBuildings();
     this.drawTempOverlay();
+
     if (this.dots.filter((d) => d.ref.alive).length !== alive(s).length) this.spawnDots();
     for (const d of this.dots) {
       d.go.setPosition(d.ref.pos.x * TILE + TILE / 2, d.ref.pos.y * TILE + TILE / 2);
@@ -246,8 +376,11 @@ export class WorldScene extends Phaser.Scene {
 
   shutdown() {
     this.ctx.events.off('ui:command', this.onCommand);
-    this.scale.off('resize', this.fitCamera, this);
-    this.input.off('pointermove', this.onPointerMove, this);
+    this.scale.off('resize', this.onResize, this);
     this.input.off('pointerdown', this.onPointerDown, this);
+    this.input.off('pointermove', this.onPointerMove, this);
+    this.input.off('pointerup', this.onPointerUp, this);
+    this.input.off('pointerupoutside', this.onPointerUp, this);
+    this.input.off('wheel');
   }
 }
