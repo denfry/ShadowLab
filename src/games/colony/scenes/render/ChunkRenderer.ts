@@ -1,6 +1,6 @@
 import Phaser from 'phaser';
 import type { ColonyState } from '../../domain/types';
-import { biomeAt, elevationAt, biomeCodeAt } from '../../systems/grid';
+import { biomeAt, elevationAt, biomeCodeAt, inBounds } from '../../systems/grid';
 import { TILE, CHUNK } from '../../data/balance';
 import { chunkIdOf, chunkCounts, chunkTileBounds, visibleChunkRange } from './chunkMath';
 import { BIOME_TEX, elevationShade, slopeAO, clampByte } from './textures';
@@ -40,7 +40,7 @@ export class ChunkRenderer {
    * FIX 2: per-tile tint via a reusable Image — drawFrame has no tint arg,
    * so we stamp a Phaser.GameObjects.Image with setTint(grey) then rt.draw().
    */
-  private bake(cx: number, cy: number): LiveChunk {
+  private bake(cx: number, cy: number, sig: number): LiveChunk {
     const { x0, y0, x1, y1 } = chunkTileBounds(cx, cy, CHUNK, this.state.map.w, this.state.map.h);
     const w = (x1 - x0 + 1) * TILE;
     const h = (y1 - y0 + 1) * TILE;
@@ -60,9 +60,12 @@ export class ChunkRenderer {
         const elev = elevationAt(this.state.map, x, y);
 
         // Compute min neighbour elevation for slope AO (cliff-edge darkening).
+        // Guard OOB: elevationAt returns 0 for out-of-bounds, which would
+        // trigger maximum cliff-darkening on map edges. Only include in-bounds neighbours.
         let nmin = elev;
         for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]] as const) {
-          nmin = Math.min(nmin, elevationAt(this.state.map, x + dx, y + dy));
+          const nx = x + dx, ny = y + dy;
+          if (inBounds(nx, ny, this.state.map)) nmin = Math.min(nmin, elevationAt(this.state.map, nx, ny));
         }
 
         // Elevation-brighter / cliff-darker grey tint: 0..255
@@ -81,7 +84,7 @@ export class ChunkRenderer {
     // Clean up the reusable stamp image — it was never part of the scene display.
     stamp.destroy();
 
-    return { rt, sig: this.chunkSig(cx, cy) };
+    return { rt, sig };
   }
 
   /**
@@ -104,10 +107,14 @@ export class ChunkRenderer {
         wanted.add(id);
         const existing = this.live.get(id);
         if (!existing) {
-          this.live.set(id, this.bake(cx, cy));
-        } else if (existing.sig !== this.chunkSig(cx, cy)) {
-          existing.rt.destroy();
-          this.live.set(id, this.bake(cx, cy));
+          const sig = this.chunkSig(cx, cy);
+          this.live.set(id, this.bake(cx, cy, sig));
+        } else {
+          const sig = this.chunkSig(cx, cy);
+          if (existing.sig !== sig) {
+            existing.rt.destroy();
+            this.live.set(id, this.bake(cx, cy, sig));
+          }
         }
       }
     }
