@@ -9,8 +9,9 @@ import { createColony } from '../domain/createColony';
 import { toSave } from '../domain/save';
 import { randomSeed } from '@/core/utils/rng';
 
-const TERRAIN_COLOR: Record<string, number> = {
-  grass: 0x223018, forest: 0x1b2a12, rock: 0x2c2c26, water: 0x16263a,
+const BIOME_COLOR: Record<string, number> = {
+  water: 0x1d4256, marsh: 0x3b4a2c, meadow: 0x4f7d33, grass: 0x223018,
+  forest: 0x1b2a12, rock: 0x2c2c26, mountain: 0x4a4a44,
 };
 const BUILDING_COLOR: Record<BuildingType, number> = {
   farm: 0x84de5a, bedroom: 0xf0a840, storage: 0xc8b88a, lab: 0x4ad0ff,
@@ -76,7 +77,7 @@ export class WorldScene extends Phaser.Scene {
   private drawMap() {
     const g = this.add.graphics();
     for (const t of this.state.map.tiles) {
-      g.fillStyle(TERRAIN_COLOR[t.terrain] ?? 0x222222, 1);
+      g.fillStyle(BIOME_COLOR[t.biome] ?? 0x222222, 1);
       g.fillRect(t.x * TILE, t.y * TILE, TILE - 1, TILE - 1);
     }
     g.lineStyle(1, 0x000000, 0.15);
