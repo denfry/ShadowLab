@@ -1,5 +1,5 @@
 import type { Pt } from '../domain/types';
-import { type Grid, idx, neighbors4, tileAt } from './grid';
+import { type Grid, idx, neighbors4, passableAt } from './grid';
 
 const key = (x: number, y: number) => y * 100000 + x;
 const manhattan = (ax: number, ay: number, bx: number, by: number) =>
@@ -29,8 +29,7 @@ export function findPath(g: Grid, start: Pt, goal: Pt): Pt[] | null {
     const cg = gScore.get(key(cur.x, cur.y)) ?? Infinity;
     for (const n of neighbors4(cur.x, cur.y, g)) {
       const isGoal = n.x === goal.x && n.y === goal.y;
-      const tile = tileAt(n.x, n.y, g);
-      if (!isGoal && (!tile || !tile.passable)) continue; // в цель можно войти даже если непроходима
+      if (!isGoal && !passableAt(g, n.x, n.y)) continue; // в цель можно войти даже если непроходима
       const nk = key(n.x, n.y);
       const tentative = cg + 1;
       if (tentative < (gScore.get(nk) ?? Infinity)) {

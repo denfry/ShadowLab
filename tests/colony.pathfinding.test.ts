@@ -1,15 +1,15 @@
 import { describe, expect, it } from 'vitest';
 import { findPath } from '@/games/colony/systems/pathfinding';
-import type { Tile } from '@/games/colony/domain/types';
+import type { ColonyMap } from '@/games/colony/systems/grid';
 
-const grid = (w: number, h: number, blocked: [number, number][] = []) => {
-  const set = new Set(blocked.map(([x, y]) => `${x},${y}`));
-  const tiles: Tile[] = [];
-  for (let y = 0; y < h; y++)
-    for (let x = 0; x < w; x++)
-      tiles.push({ x, y, terrain: 'grass', fertility: 0.5, passable: !set.has(`${x},${y}`), roomId: 0, temp: 16 });
+function grid(w: number, h: number, blocked: [number, number][] = []): ColonyMap {
+  const tiles = Array.from({ length: w * h }, (_, i) => ({
+    x: i % w, y: Math.floor(i / w), biome: 'grass' as const, elevation: 0.5,
+    fertility: 0.5, passable: true, roomId: 0, temp: 16,
+  }));
+  for (const [x, y] of blocked) tiles[y * w + x].passable = false;
   return { w, h, tiles };
-};
+}
 
 describe('A* pathfinding', () => {
   it('finds a straight path on open ground', () => {
