@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   createMap, idx, biomeAt, setBiome, passableAt, setPassable, tempAt, setTemp,
-  fertilityAt, roomIdAt, setRoomId, buildingIdAt, setBuildingId,
+  elevationAt, fertilityAt, roomIdAt, setRoomId, buildingIdAt, setBuildingId,
   nodeAt, setNode, depleteNode, forEachTile, findNearestNode, tileAt,
 } from '@/games/colony/systems/grid';
 
@@ -69,5 +69,14 @@ describe('SoA grid backend', () => {
     expect(t.biome).toBe('grass');
     t.biome = 'forest';
     expect(biomeAt(m, 0, 0)).toBe('grass'); // view is a copy
+  });
+  it('elevationAt/fertilityAt read the backing arrays and default to 0 OOB', () => {
+    const m = createMap(3, 3);
+    m.elevation[idx(1, 1, m.w)] = 0.42;
+    m.fertility[idx(1, 1, m.w)] = 0.85;
+    expect(elevationAt(m, 1, 1)).toBeCloseTo(0.42, 5);
+    expect(fertilityAt(m, 1, 1)).toBeCloseTo(0.85, 5);
+    expect(elevationAt(m, 9, 9)).toBe(0);
+    expect(fertilityAt(m, 9, 9)).toBe(0);
   });
 });

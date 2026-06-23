@@ -3,7 +3,6 @@ import { describe, it, expect } from 'vitest';
 import { createColony } from '@/games/colony/domain/createColony';
 import { toSave, fromSave } from '@/games/colony/domain/save';
 import { nodeAt, biomeAt, setNode, setBiome, passableAt, buildingIdAt, forEachTile } from '@/games/colony/systems/grid';
-import { idx } from '@/games/colony/systems/grid';
 
 describe('save round-trip', () => {
   it('мир регенерируется из сида идентично (биомы)', () => {
@@ -35,8 +34,7 @@ describe('save round-trip', () => {
     forEachTile(s.map, (_i, x, y) => {
       if (wtX === -1 && nodeAt(s.map, x, y)?.kind === 'wood') { wtX = x; wtY = y; }
     });
-    const node = nodeAt(s.map, wtX, wtY)!;
-    node.amount = 3;
+    setNode(s.map, wtX, wtY, { ...nodeAt(s.map, wtX, wtY)!, amount: 3 });
     const r = fromSave(toSave(s));
     expect(nodeAt(r.map, wtX, wtY)?.amount).toBe(3);
   });

@@ -3,7 +3,7 @@ import { fbm } from '@/core/utils/noise';
 import type { Biome, NodeKind, Pt, ResourceNode } from './types';
 import { GEN, BIOME_FERTILITY, MAP_W, MAP_H } from '../data/balance';
 import type { ColonyMap } from '../systems/grid';
-import { createMap, idx, setBiome, setNode, passableAt, biomeAt } from '../systems/grid';
+import { createMap, idx, setBiome, setNode, setPassable, passableAt, biomeAt } from '../systems/grid';
 
 /** Биом по высоте/влажности. */
 function classify(elev: number, moist: number): Biome {
@@ -75,7 +75,7 @@ export function regenerateWorld(seed: number): ColonyMap {
     m.elevation[i] = e;
     m.fertility[i] = BIOME_FERTILITY[biome];
     setBiome(m, x, y, biome);
-    m.passable[i] = (biome !== 'water' && biome !== 'mountain') ? 1 : 0;
+    setPassable(m, x, y, biome !== 'water' && biome !== 'mountain');
     const node = nodeFor(seed, x, y, biome);
     if (node) setNode(m, x, y, node);
   }
