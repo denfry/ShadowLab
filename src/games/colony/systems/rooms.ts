@@ -1,5 +1,5 @@
 import type { ColonyState, Room } from '../domain/types';
-import { idx } from './grid';
+import { idx, roomIdAt, setRoomId } from './grid';
 
 /** Сигнатура набора построенных стен/дверей — меняется только при их изменении. */
 export function wallsDoorsSig(s: ColonyState): string {
@@ -14,7 +14,7 @@ export function wallsDoorsSig(s: ColonyState): string {
  *  дотягивается заливка от границы карты, — улица (roomId 0); замкнутые
  *  внутренние области нумеруются как комнаты. */
 export function recomputeRooms(s: ColonyState): void {
-  const { w, h, tiles } = s.map;
+  const { w, h } = s.map;
   const barrier = new Uint8Array(w * h);
   for (const b of s.buildings) {
     if (b.built && (b.type === 'wall' || b.type === 'door')) barrier[idx(b.tile.x, b.tile.y, w)] = 1;
@@ -39,15 +39,16 @@ export function recomputeRooms(s: ColonyState): void {
     push(x + 1, y); push(x - 1, y); push(x, y + 1); push(x, y - 1);
   }
 
-  for (const t of tiles) t.roomId = 0;
+  for (let x = 0; x < w; x++) for (let y = 0; y < h; y++) setRoomId(s.map, x, y, 0);
   const rooms: Room[] = [];
   let nextId = 1;
   for (let i = 0; i < w * h; i++) {
-    if (barrier[i] || outside[i] || tiles[i].roomId !== 0) continue;
+    const ix = i % w, iy = Math.floor(i / w);
+    if (barrier[i] || outside[i] || roomIdAt(s.map, ix, iy) !== 0) continue;
     // Новая комната: BFS по не-барьерным внутренним тайлам.
     const comp: number[] = [];
     const q = [i];
-    tiles[i].roomId = nextId;
+    setRoomId(s.map, ix, iy, nextId);
     while (q.length) {
       const j = q.pop()!;
       comp.push(j);
@@ -55,8 +56,8 @@ export function recomputeRooms(s: ColonyState): void {
       const visit = (nx: number, ny: number) => {
         if (nx < 0 || ny < 0 || nx >= w || ny >= h) return;
         const nj = idx(nx, ny, w);
-        if (barrier[nj] || outside[nj] || tiles[nj].roomId !== 0) return;
-        tiles[nj].roomId = nextId;
+        if (barrier[nj] || outside[nj] || roomIdAt(s.map, nx, ny) !== 0) return;
+        setRoomId(s.map, nx, ny, nextId);
         q.push(nj);
       };
       visit(x + 1, y); visit(x - 1, y); visit(x, y + 1); visit(x, y - 1);

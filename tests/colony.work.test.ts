@@ -3,6 +3,7 @@ import { createColony } from '@/games/colony/domain/createColony';
 import { runWork } from '@/games/colony/systems/work';
 import type { Building } from '@/games/colony/domain/types';
 import { MAP_W, MAP_H } from '@/games/colony/data/balance';
+import { setNode, setBiome, nodeAt, biomeAt } from '@/games/colony/systems/grid';
 
 const center = () => ({ x: Math.floor(MAP_W / 2), y: Math.floor(MAP_H / 2) });
 
@@ -24,15 +25,17 @@ describe('work system', () => {
 
   it('chopping a forest tile yields wood and depletes the tile', () => {
     const s = createColony(1);
-    // Найти лесной тайл.
-    const forest = s.map.tiles.find((t) => t.terrain === 'forest' && (t.wood ?? 0) > 0)!;
+    const tx = Math.floor(MAP_W / 2), ty = Math.floor(MAP_H / 2);
+    setBiome(s.map, tx, ty, 'forest');
+    setNode(s.map, tx, ty, { kind: 'wood', amount: 0.01, max: 30 }); // почти пусто — истощится за 1 тик
     const c = s.colonists[0];
-    c.task = 'work'; c.targetTile = { x: forest.x, y: forest.y }; c.targetBuildingId = undefined; c.pos = { x: forest.x, y: forest.y };
+    c.task = 'work'; c.targetTile = { x: tx, y: ty }; c.targetBuildingId = undefined; c.pos = { x: tx, y: ty };
     const wood0 = s.resources.wood.amount;
-    const left0 = forest.wood!;
     runWork(s);
     expect(s.resources.wood.amount).toBeGreaterThan(wood0);
-    expect(forest.wood!).toBeLessThan(left0);
+    // делянка истощена → биом grass, узел очищен
+    expect(biomeAt(s.map, tx, ty)).toBe('grass');
+    expect(nodeAt(s.map, tx, ty)).toBeUndefined();
   });
 
   it('builds a blueprint to completion, then it becomes built', () => {

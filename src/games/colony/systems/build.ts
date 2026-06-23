@@ -3,14 +3,14 @@ import type { BuildingType, ColonyState } from '../domain/types';
 import {
   BUILD_COST, BUILD_REQUIRED, BUILDING_JOB, BUILDING_WORK_SLOTS,
 } from '../data/balance';
-import { tileAt } from './grid';
+import { biomeAt, buildingIdAt, inBounds } from './grid';
 
 export function canPlace(s: ColonyState, x: number, y: number): boolean {
-  const t = tileAt(x, y, s.map);
-  if (!t) return false;
-  if (t.terrain === 'water' || t.terrain === 'rock') return false;
-  if (t.buildingId) return false;
-  if (s.buildings.some((b) => b.tile.x === x && b.tile.y === y)) return false;
+  if (!inBounds(x, y, s.map)) return false;
+  const b = biomeAt(s.map, x, y);
+  if (b === 'water' || b === 'mountain') return false;
+  if (buildingIdAt(s.map, x, y)) return false;
+  if (s.buildings.some((bl) => bl.tile.x === x && bl.tile.y === y)) return false;
   return true;
 }
 

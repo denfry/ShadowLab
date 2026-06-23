@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { createColony } from '@/games/colony/domain/createColony';
 import { canPlace, placeBlueprint } from '@/games/colony/systems/build';
+import { setBiome } from '@/games/colony/systems/grid';
 import { MAP_W, MAP_H } from '@/games/colony/data/balance';
 
 const center = () => ({ x: Math.floor(MAP_W / 2), y: Math.floor(MAP_H / 2) });
@@ -18,13 +19,14 @@ describe('build placement', () => {
     expect(b.built).toBe(false);
   });
 
-  it('rejects placement on water', () => {
+  it('нельзя строить на воде и горах, можно на скале', () => {
     const s = createColony(1);
-    const water = s.map.tiles.find((t) => t.terrain === 'water');
-    if (!water) return; // на редком сиде воды может не быть в кадре теста
-    expect(canPlace(s, water.x, water.y)).toBe(false);
-    const res = placeBlueprint(s, 'farm', water.x, water.y);
-    expect(res.ok).toBe(false);
+    setBiome(s.map, 5, 5, 'water');
+    setBiome(s.map, 6, 5, 'mountain');
+    setBiome(s.map, 7, 5, 'rock');
+    expect(canPlace(s, 5, 5)).toBe(false);
+    expect(canPlace(s, 6, 5)).toBe(false);
+    expect(canPlace(s, 7, 5)).toBe(true);
   });
 
   it('rejects placement on an occupied tile', () => {

@@ -7,7 +7,7 @@ import {
   HEALTH_REGEN_PER_TICK, HUNGER_EAT_THRESHOLD, HUNGER_PER_TICK,
   SLEEP_RECOVERY_PER_TICK, SLEEP_WAKE_FATIGUE, STARVE_DAMAGE_PER_TICK,
 } from '../data/balance';
-import { idx } from './grid';
+import { tempAt } from './grid';
 import { findPath } from './pathfinding';
 
 const tileOf = (c: Colonist): Pt => ({ x: Math.round(c.pos.x), y: Math.round(c.pos.y) });
@@ -41,8 +41,7 @@ export function runNeeds(s: ColonyState): void {
     c.needs.fatigue = clamp(c.needs.fatigue + FATIGUE_PER_TICK, 0, 100);
 
     // 1b) Холод: эффективная температура = тайл под колонистом + одежда.
-    const ct = s.map.tiles[idx(Math.round(c.pos.x), Math.round(c.pos.y), s.map.w)];
-    const tileTemp = ct ? ct.temp : s.env.outdoorTemp;
+    const tileTemp = tempAt(s.map, Math.round(c.pos.x), Math.round(c.pos.y));
     const effTemp = tileTemp + (c.clothed ? CLOTHING_WARMTH : 0);
     if (effTemp < COMFORT_MIN) {
       c.needs.cold = clamp(c.needs.cold + (COMFORT_MIN - effTemp) * COLD_PER_DEGREE, 0, 100);
