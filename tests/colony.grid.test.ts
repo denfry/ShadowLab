@@ -4,7 +4,8 @@ import {
   biomeAt, passableAt, tempAt, nodeAt, setPassable, setBiome, setNode,
   depleteNode, findNearestNode, forEachTile,
 } from '@/games/colony/systems/grid';
-import type { Tile, ColonyMap } from '@/games/colony/domain/types';
+import type { ColonyMap } from '@/games/colony/systems/grid';
+import type { Tile } from '@/games/colony/domain/types';
 
 const grid = (w: number, h: number): { w: number; h: number; tiles: Tile[] } => {
   const tiles: Tile[] = [];
