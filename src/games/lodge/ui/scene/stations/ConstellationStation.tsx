@@ -22,7 +22,7 @@ export function ConstellationStation({ puzzle, dispatch }: StationProps) {
   return (
     <group>
       {edges.map((e, k) => (
-        <Line key={k} points={[at(e[0]), at(e[1])]} color="#9fd0ff" lineWidth={2} />
+        <Line key={`${e[0]}-${e[1]}`} points={[at(e[0]), at(e[1])]} color="#9fd0ff" lineWidth={2} />
       ))}
       {nodePositions.map((_, i) => (
         <mesh key={i} position={at(i)} onClick={() => clickNode(i)}>
