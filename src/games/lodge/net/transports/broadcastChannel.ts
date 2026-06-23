@@ -49,8 +49,9 @@ export class BroadcastChannelTransport implements Transport {
       if (w.from === this.selfId) return; // others only
       for (const cb of [...this.msgCbs]) cb(w.msg);
     } else {
+      const isNew = !this.seen.has(w.id);
       this.seen.set(w.id, { name: w.name, at: Date.now() });
-      this.emitPresence();
+      if (isNew) this.emitPresence();
     }
   }
 
