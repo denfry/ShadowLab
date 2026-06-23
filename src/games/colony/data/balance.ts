@@ -105,6 +105,9 @@ export const COLONIST_NAMES = [
   'Kai', 'Lux', 'Mira', 'Nox', 'Ory', 'Pax', 'Quill', 'Rhea', 'Sol', 'Tia',
 ];
 
+// ---- План B: масштаб/иерархия ----
+export const CLUSTER = 16;            // сторона кластера (тайлы) — pathHierarchy + spatialIndex
+
 // ---- Генерация мира (План A: 28²; План B поднимет MAP до 256) ----
 export const GEN = {
   elevScale: 7,        // делитель координат для шума высоты (крупнее = плавнее)
