@@ -23,4 +23,13 @@ describe('domain primitives', () => {
     expect(skillMultiplier(0)).toBeCloseTo(1.0, 5);
     expect(skillMultiplier(5)).toBeCloseTo(1.4, 5);
   });
+
+  it('Tile несёт биом, высоту и опц. узел ресурса', () => {
+    const t: import('@/games/colony/domain/types').Tile = {
+      x: 0, y: 0, biome: 'forest', elevation: 0.5, fertility: 0.4,
+      passable: true, roomId: 0, temp: 16, node: { kind: 'wood', amount: 30, max: 30 },
+    };
+    expect(t.biome).toBe('forest');
+    expect(t.node?.kind).toBe('wood');
+  });
 });

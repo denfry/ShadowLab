@@ -1,4 +1,6 @@
-export type Terrain = 'grass' | 'forest' | 'rock' | 'water';
+export type Biome = 'water' | 'marsh' | 'meadow' | 'grass' | 'forest' | 'rock' | 'mountain';
+export type NodeKind = 'wood' | 'stone' | 'clay' | 'iron' | 'gold' | 'berries' | 'fish';
+export interface ResourceNode { kind: NodeKind; amount: number; max: number; }
 export type ResourceId = 'food' | 'wood' | 'science';
 export type SkillId =
   | 'farming' | 'woodcutting' | 'building' | 'research'
@@ -17,13 +19,14 @@ export interface Pt { x: number; y: number; }
 export interface Tile {
   x: number;
   y: number;
-  terrain: Terrain;
-  fertility: number;   // 0..1 — влияет на урожай ферм
+  biome: Biome;        // было terrain: Terrain
+  elevation: number;   // 0..1 — 2.5D-тень/вода/склон
+  fertility: number;   // 0..1 — урожай ферм
   passable: boolean;
   buildingId?: string;
-  wood?: number;       // запас дерева на forest-тайле
-  roomId: number;   // 0 = улица; >0 = id комнаты
-  temp: number;     // °C текущая температура тайла
+  node?: ResourceNode; // было wood?: number (узел дерева/камня/…)
+  roomId: number;      // 0 = улица; >0 = id комнаты
+  temp: number;        // °C текущая температура тайла
 }
 
 export interface Skill { level: number; xp: number; }
