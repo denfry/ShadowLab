@@ -1,4 +1,5 @@
 import { createBrowserRouter, Link } from 'react-router-dom';
+import { lazy, Suspense } from 'react';
 import { AppLayout } from '@/ui/layout/AppLayout';
 import { HomePage } from '@/pages/home/HomePage';
 import { GamesPage } from '@/pages/games/GamesPage';
@@ -10,6 +11,8 @@ import { NewsPage } from '@/pages/news/NewsPage';
 import { SettingsPage } from '@/pages/settings/SettingsPage';
 import { AboutPage } from '@/pages/about/AboutPage';
 import { LoginPage } from '@/pages/login/LoginPage';
+
+const LodgeDevHarness = lazy(() => import('@/games/lodge/dev/LodgeDevHarness'));
 
 function NotFound() {
   return (
@@ -43,4 +46,16 @@ export const router = createBrowserRouter([
   // The launcher is full-screen and intentionally outside the portal chrome.
   { path: '/play/:id', element: <GameLauncherPage /> },
   { path: '/login', element: <LoginPage /> },
+  ...(import.meta.env.DEV
+    ? [
+        {
+          path: '/dev/lodge',
+          element: (
+            <Suspense fallback={<div style={{ color: '#fff', padding: 24 }}>Загрузка ложи…</div>}>
+              <LodgeDevHarness />
+            </Suspense>
+          ),
+        },
+      ]
+    : []),
 ]);
