@@ -19,7 +19,7 @@ export function clampScroll(
   const visW = viewW / zoom, visH = viewH / zoom;
   const maxX = Math.max(0, worldW - visW), maxY = Math.max(0, worldH - visH);
   return {
-    x: Math.min(Math.max(0, scrollX), Math.max(maxX, worldW)),
-    y: Math.min(Math.max(0, scrollY), Math.max(maxY, worldH)),
+    x: Math.min(Math.max(0, scrollX), maxX),
+    y: Math.min(Math.max(0, scrollY), maxY),
   };
 }

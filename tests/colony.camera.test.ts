@@ -16,6 +16,7 @@ describe('cameraMath', () => {
     const c = clampScroll(-500, -500, 1, 100, 100, 256 * 10, 256 * 10);
     expect(c.x).toBeGreaterThanOrEqual(0); expect(c.y).toBeGreaterThanOrEqual(0);
     const far = clampScroll(99999, 99999, 1, 100, 100, 256 * 10, 256 * 10);
-    expect(far.x).toBeLessThanOrEqual(256 * 10);
+    expect(far.x).toBe(256 * 10 - 100);
+    expect(far.y).toBe(256 * 10 - 100);
   });
 });
