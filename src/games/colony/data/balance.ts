@@ -1,4 +1,4 @@
-import type { BuildingType, JobType, ResourceId } from '../domain/types';
+import type { Biome, BuildingType, JobType, ResourceId } from '../domain/types';
 
 export const MAP_W = 28;
 export const MAP_H = 28;
@@ -104,3 +104,25 @@ export const COLONIST_NAMES = [
   'Ada', 'Bo', 'Cy', 'Dax', 'Eli', 'Fen', 'Gio', 'Hana', 'Ivo', 'Juno',
   'Kai', 'Lux', 'Mira', 'Nox', 'Ory', 'Pax', 'Quill', 'Rhea', 'Sol', 'Tia',
 ];
+
+// ---- Генерация мира (План A: 28²; План B поднимет MAP до 256) ----
+export const GEN = {
+  elevScale: 7,        // делитель координат для шума высоты (крупнее = плавнее)
+  moistScale: 6,
+  waterLevel: 0.34,    // elevation < — вода
+  marshMax: 0.39,      // < и влажно — болото
+  rockMin: 0.60,       // > — скалы
+  mountainMin: 0.70,   // > — горы (непроходимо)
+  forestMoist: 0.60,   // влажность > в средней высоте — лес
+  meadowMoist: 0.44,   // влажность > — луга
+  riverCount: 3,       // рек на карту
+  riverMaxSteps: 200,
+  // плотности залежей (вероятность узла на подходящем тайле)
+  pStone: 0.05, pIron: 0.018, pGold: 0.004, pClay: 0.05, pBerries: 0.03, pFish: 0.04,
+  woodMin: 20, woodMax: 50,   // запас узла дерева
+  oreMin: 30, oreMax: 80,
+} as const;
+
+export const BIOME_FERTILITY: Record<Biome, number> = {
+  water: 0, marsh: 0.25, meadow: 0.85, grass: 0.5, forest: 0.55, rock: 0.15, mountain: 0,
+};
