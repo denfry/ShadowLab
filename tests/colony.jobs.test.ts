@@ -2,19 +2,21 @@ import { describe, expect, it } from 'vitest';
 import { createColony } from '@/games/colony/domain/createColony';
 import { runJobScheduler } from '@/games/colony/systems/jobScheduler';
 import type { Building } from '@/games/colony/domain/types';
-import { setNode, passableAt } from '@/games/colony/systems/grid';
+import { setNode, passableAt, neighbors4 } from '@/games/colony/systems/grid';
 import { pickStartSite } from '@/games/colony/domain/worldgen';
 
 // Find a passable tile near the start site to anchor buildings.
 // MAP_W/2,MAP_H/2 is unreliable on a 256² world (may be water/mountain).
 function nearbyPassable(s: ReturnType<typeof createColony>, dx: number, dy: number): { x: number; y: number } {
   const start = pickStartSite(s.map);
-  // Walk outward in the requested direction until we land on a passable tile.
   for (let r = 1; r <= 10; r++) {
     const x = start.x + dx * r, y = start.y + dy * r;
     if (passableAt(s.map, x, y)) return { x, y };
   }
-  return start; // fallback (start itself is always passable)
+  for (const n of neighbors4(start.x, start.y, s.map)) {
+    if (passableAt(s.map, n.x, n.y)) return { x: n.x, y: n.y };
+  }
+  return start;
 }
 
 const farmAt = (x: number, y: number): Building => ({

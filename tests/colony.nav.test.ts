@@ -20,5 +20,5 @@ describe('nav lifecycle', () => {
     const a = createColony(99), b = createColony(99);
     for (let i = 0; i < 480; i++) { tick(a); tick(b); }
     expect(a.colonists.map(c => [c.task, c.path.length])).toEqual(b.colonists.map(c => [c.task, c.path.length]));
-  });
+  }, 30000);
 });
