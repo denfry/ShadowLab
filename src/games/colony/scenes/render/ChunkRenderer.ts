@@ -7,10 +7,14 @@ import { BIOME_TEX, elevationShade, slopeAO, clampByte } from './textures';
 
 interface LiveChunk { rt: Phaser.GameObjects.RenderTexture; sig: number; }
 
+/** Rehash visible chunks for biome changes once every N frames (felled trees re-tint within ≤N frames). */
+const REHASH_INTERVAL = 20;
+
 export class ChunkRenderer {
   private live = new Map<number, LiveChunk>();
   private cw: number;
   private ch: number;
+  private frameCount = 0;
 
   constructor(private scene: Phaser.Scene, private state: ColonyState) {
     const c = chunkCounts(state.map.w, state.map.h, CHUNK);
@@ -27,7 +31,7 @@ export class ChunkRenderer {
     let h = 2166136261;
     for (let y = y0; y <= y1; y++) {
       for (let x = x0; x <= x1; x++) {
-        // FIX 1: use accessor — no direct state.map.biome[] outside grid.ts
+        // use biomeCodeAt accessor — no direct SoA reads outside grid.ts
         h ^= biomeCodeAt(this.state.map, x, y);
         h = Math.imul(h, 16777619);
       }
@@ -88,10 +92,16 @@ export class ChunkRenderer {
   }
 
   /**
-   * Call each frame: cull off-screen chunks, bake new visible ones,
-   * rebake dirty ones whose biome signature changed (e.g. woodcutting).
+   * Call each frame:
+   *  - Always: cull off-screen chunks + bake newly-visible chunks immediately.
+   *  - Every REHASH_INTERVAL frames: re-hash already-live chunks and rebake any
+   *    whose biome signature changed (e.g. a felled tree → grass). This keeps
+   *    per-frame cost to O(visible-new) rather than O(65k) on every frame.
    */
   update(): void {
+    this.frameCount++;
+    const doRehash = (this.frameCount % REHASH_INTERVAL) === 0;
+
     const cam = this.scene.cameras.main;
     const r = visibleChunkRange(
       cam.scrollX, cam.scrollY, cam.zoom,
@@ -107,9 +117,11 @@ export class ChunkRenderer {
         wanted.add(id);
         const existing = this.live.get(id);
         if (!existing) {
+          // New chunk just became visible — bake immediately every frame.
           const sig = this.chunkSig(cx, cy);
           this.live.set(id, this.bake(cx, cy, sig));
-        } else {
+        } else if (doRehash) {
+          // Throttled dirty check — only re-hash every REHASH_INTERVAL frames.
           const sig = this.chunkSig(cx, cy);
           if (existing.sig !== sig) {
             existing.rt.destroy();
@@ -119,7 +131,7 @@ export class ChunkRenderer {
       }
     }
 
-    // Destroy RTs for chunks that scrolled out of view (+ margin already in visibleChunkRange).
+    // Cull: destroy RTs for chunks that scrolled out of view.
     for (const [id, lc] of this.live) {
       if (!wanted.has(id)) {
         lc.rt.destroy();

@@ -118,10 +118,11 @@ export class WorldScene extends Phaser.Scene {
     this.sprites = new SpriteLayer(this, this.state);
     this.minimap = new Minimap(this, this.state, (tx, ty) => this.centerOnTile(tx, ty));
 
-    // Temp overlay layer — drawn above terrain/water, below/above sprites as needed
-    this.tempLayer = this.add.graphics();
+    // Temp overlay layer — above water (-900), below Y-sorted sprites (0..~5600).
+    this.tempLayer = this.add.graphics().setDepth(-500);
 
-    this.ghost = this.add.rectangle(0, 0, TILE, TILE, 0xffffff, 0.25).setVisible(false);
+    // Ghost always visible above sprites, below minimap (9000).
+    this.ghost = this.add.rectangle(0, 0, TILE, TILE, 0xffffff, 0.25).setVisible(false).setDepth(8500);
     this.ghost.setStrokeStyle(1, 0xffffff, 0.6);
 
     this.ctx.events.emit('game:state', computeHud(this.state));
@@ -175,6 +176,7 @@ export class WorldScene extends Phaser.Scene {
   }
 
   private onPointerDown = (p: Phaser.Input.Pointer) => {
+    if (this.minimap?.contains(p.x, p.y)) return;
     if (this.placingType) {
       const t = this.worldToTile(p.x, p.y);
       const res = placeBlueprint(this.state, this.placingType, t.x, t.y);
@@ -194,6 +196,7 @@ export class WorldScene extends Phaser.Scene {
   };
 
   private onPointerMove = (p: Phaser.Input.Pointer) => {
+    if (this.minimap?.contains(p.x, p.y)) return;
     if (this.placingType) {
       const t = this.worldToTile(p.x, p.y);
       const ok = canPlace(this.state, t.x, t.y);
@@ -217,6 +220,7 @@ export class WorldScene extends Phaser.Scene {
   };
 
   private onPointerUp = (p: Phaser.Input.Pointer) => {
+    if (this.minimap?.contains(p.x, p.y)) return;
     if (!this.isDragging) return;
     this.isDragging = false;
     // If pointer barely moved, treat as a colonist-select click

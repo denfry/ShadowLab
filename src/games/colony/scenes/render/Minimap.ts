@@ -1,7 +1,7 @@
 import Phaser from 'phaser';
 import type { ColonyState } from '../../domain/types';
 import { biomeAt, forEachTile } from '../../systems/grid';
-import { TILE, MINIMAP_PX, MAP_W, MAP_H } from '../../data/balance';
+import { TILE, MINIMAP_PX } from '../../data/balance';
 import { BIOME_BASE } from './textures';
 import { worldToMinimap, minimapToWorldTile, minimapViewportRect } from './chunkMath';
 
@@ -184,6 +184,16 @@ export class Minimap {
       Math.min(mW - Math.max(0, vp.x), vp.w),
       Math.min(mH - Math.max(0, vp.y), vp.h),
     );
+  }
+
+  /**
+   * Returns true iff the given screen-space point lies within the minimap rectangle.
+   * Used by WorldScene to suppress world pointer handlers when the minimap is hit.
+   */
+  contains(screenX: number, screenY: number): boolean {
+    const lx = screenX - this.originX;
+    const ly = screenY - this.originY;
+    return lx >= 0 && ly >= 0 && lx < MINIMAP_PX && ly < MINIMAP_PX;
   }
 
   /** Remove texture, destroy GameObjects, and detach input listeners. */
