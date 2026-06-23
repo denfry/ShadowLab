@@ -2,9 +2,6 @@ export type Biome = 'water' | 'marsh' | 'meadow' | 'grass' | 'forest' | 'rock' |
 export type NodeKind = 'wood' | 'stone' | 'clay' | 'iron' | 'gold' | 'berries' | 'fish';
 export interface ResourceNode { kind: NodeKind; amount: number; max: number; }
 
-/** Хранилище карты. План A: массив тайлов. План B сменит бэкенд на типизированные
- *  массивы (SoA) — сигнатуры аксессоров в grid.ts останутся прежними. */
-export type ColonyMap = { w: number; h: number; tiles: Tile[] };
 export type ResourceId = 'food' | 'wood' | 'science';
 export type SkillId =
   | 'farming' | 'woodcutting' | 'building' | 'research'

@@ -1,9 +1,8 @@
-import type { Biome, NodeKind, Pt, ResourceNode, Tile, ColonyMap } from '../domain/types';
+import type { Biome, NodeKind, Pt, ResourceNode, Tile } from '../domain/types';
 
-/** Alias for ColonyMap (maintains Grid type for compatibility). */
+/** Хранилище карты (План A: Tile[]; План B сменит бэкенд на SoA за теми же сигнатурами). */
+export type ColonyMap = { w: number; h: number; tiles: Tile[] };
 export type Grid = ColonyMap;
-
-export { ColonyMap } from '../domain/types';
 
 export const idx = (x: number, y: number, w: number): number => y * w + x;
 
