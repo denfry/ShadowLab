@@ -5,33 +5,20 @@ import { TILE } from '../data/balance';
 import { tick, alive } from '../systems/tick';
 import { computeHud } from '../systems/projection';
 import { placeBlueprint, canPlace } from '../systems/build';
-import { biomeAt, tempAt } from '../systems/grid';
+import { tempAt } from '../systems/grid';
 import { createColony } from '../domain/createColony';
 import { toSave } from '../domain/save';
 import { randomSeed } from '@/core/utils/rng';
 import { visibleTileRange, clampScroll } from './cameraMath';
-
-const BIOME_COLOR: Record<string, number> = {
-  water: 0x1d4256, marsh: 0x3b4a2c, meadow: 0x4f7d33, grass: 0x223018,
-  forest: 0x1b2a12, rock: 0x2c2c26, mountain: 0x4a4a44,
-};
-const BUILDING_COLOR: Record<BuildingType, number> = {
-  farm: 0x84de5a, bedroom: 0xf0a840, storage: 0xc8b88a, lab: 0x4ad0ff,
-  wall: 0x6b6b63, door: 0xa6895b, heater: 0xff6a3d, tailor: 0xb98bd9,
-};
-const BUILDING_GLYPH: Record<BuildingType, string> = {
-  farm: 'F', bedroom: 'H', storage: 'S', lab: 'L', wall: '#', door: '/', heater: '*', tailor: 'T',
-};
-const TASK_COLOR: Record<string, number> = {
-  work: 0x84de5a, goto_work: 0xbfe89a, eat: 0xf0a840, goto_eat: 0xf0c890,
-  sleep: 0x6aa0ff, goto_sleep: 0x9ab8ff, idle: 0x8aa884,
-};
+import { buildBiomeTextures, buildSpriteTextures } from './render/textures';
+import { ChunkRenderer } from './render/ChunkRenderer';
+import { WaterLayer } from './render/WaterLayer';
+import { SpriteLayer } from './render/SpriteLayer';
+import { Minimap } from './render/Minimap';
 
 const MIN_ZOOM = 0.4;
 const MAX_ZOOM = 3.0;
 const PAN_SPEED = 8; // world-px per frame at zoom=1
-
-interface Dot { go: Phaser.GameObjects.Arc; ref: Colonist; }
 
 export class WorldScene extends Phaser.Scene {
   private state!: ColonyState;
@@ -39,17 +26,18 @@ export class WorldScene extends Phaser.Scene {
   private accumulator = 0;
   private emitAccum = 0;
   private readonly tickMs = 1000 / 8;
-  private dots: Dot[] = [];
   private mapPxW = 0;
   private mapPxH = 0;
-  private mapLayer!: Phaser.GameObjects.Graphics;
-  private buildingLayer!: Phaser.GameObjects.Container;
-  private dotLayer!: Phaser.GameObjects.Container;
   private tempLayer!: Phaser.GameObjects.Graphics;
   private tempOverlay = false;
-  private lastBuildSig = '';
   private placingType: BuildingType | null = null;
   private ghost!: Phaser.GameObjects.Rectangle;
+
+  // Render modules (Plan C)
+  private chunks!: ChunkRenderer;
+  private water!: WaterLayer;
+  private sprites!: SpriteLayer;
+  private minimap!: Minimap;
 
   // Camera pan/zoom state
   private camScrollX = 0;
@@ -79,17 +67,6 @@ export class WorldScene extends Phaser.Scene {
     this.mapPxW = this.state.map.w * TILE;
     this.mapPxH = this.state.map.h * TILE;
     this.cameras.main.setBackgroundColor('#0d140c');
-
-    // Map layer — redrawn each frame (culled to visible tiles)
-    this.mapLayer = this.add.graphics();
-
-    this.tempLayer = this.add.graphics();
-    this.buildingLayer = this.add.container(0, 0);
-    this.dotLayer = this.add.container(0, 0);
-    this.spawnDots();
-
-    this.ghost = this.add.rectangle(0, 0, TILE, TILE, 0xffffff, 0.25).setVisible(false);
-    this.ghost.setStrokeStyle(1, 0xffffff, 0.6);
 
     // Keyboard input
     this.cursors = this.input.keyboard!.createCursorKeys();
@@ -131,50 +108,35 @@ export class WorldScene extends Phaser.Scene {
 
     this.scale.on('resize', this.onResize, this);
     this.ctx.events.on('ui:command', this.onCommand);
+
+    // Build textures for the new seed, then instantiate render modules
+    buildBiomeTextures(this, this.state.seed, TILE);
+    buildSpriteTextures(this, TILE);
+
+    this.chunks = new ChunkRenderer(this, this.state);
+    this.water = new WaterLayer(this, this.state);
+    this.sprites = new SpriteLayer(this, this.state);
+    this.minimap = new Minimap(this, this.state, (tx, ty) => this.centerOnTile(tx, ty));
+
+    // Temp overlay layer — drawn above terrain/water, below/above sprites as needed
+    this.tempLayer = this.add.graphics();
+
+    this.ghost = this.add.rectangle(0, 0, TILE, TILE, 0xffffff, 0.25).setVisible(false);
+    this.ghost.setStrokeStyle(1, 0xffffff, 0.6);
+
     this.ctx.events.emit('game:state', computeHud(this.state));
-
-    // Initial map draw
-    this.redrawMap();
   }
 
-  private redrawMap() {
+  /** Center the camera scroll on tile (tx, ty) and clamp to world bounds. */
+  private centerOnTile(tx: number, ty: number): void {
     const cam = this.cameras.main;
-    const r = visibleTileRange(
-      cam.scrollX, cam.scrollY, cam.zoom,
-      cam.width, cam.height,
-      TILE, this.state.map.w, this.state.map.h,
-    );
-    this.mapLayer.clear();
-    for (let y = r.y0; y <= r.y1; y++) {
-      for (let x = r.x0; x <= r.x1; x++) {
-        const b = biomeAt(this.state.map, x, y) ?? 'grass';
-        this.mapLayer.fillStyle(BIOME_COLOR[b] ?? 0x222222, 1);
-        this.mapLayer.fillRect(x * TILE, y * TILE, TILE - 1, TILE - 1);
-      }
-    }
-    this.mapLayer.lineStyle(1, 0x000000, 0.15);
-    this.mapLayer.strokeRect(0, 0, this.mapPxW, this.mapPxH);
-  }
-
-  private buildSig() {
-    return this.state.buildings.map((b) => `${b.id}:${b.built ? 1 : 0}`).join('|');
-  }
-
-  private syncBuildings() {
-    const sig = this.buildSig();
-    if (sig === this.lastBuildSig) return;
-    this.lastBuildSig = sig;
-    this.buildingLayer.removeAll(true);
-    for (const b of this.state.buildings) {
-      const x = b.tile.x * TILE;
-      const y = b.tile.y * TILE;
-      const rect = this.add.rectangle(x + TILE / 2, y + TILE / 2, TILE - 2, TILE - 2, BUILDING_COLOR[b.type], b.built ? 0.92 : 0.35);
-      rect.setStrokeStyle(1, 0x000000, 0.3);
-      const text = this.add.text(x + TILE / 2, y + TILE / 2, BUILDING_GLYPH[b.type], {
-        fontFamily: 'monospace', fontSize: '12px', color: '#0d140c',
-      }).setOrigin(0.5);
-      this.buildingLayer.add([rect, text]);
-    }
+    this.camScrollX = (tx + 0.5) * TILE - (cam.width / this.camZoom) / 2;
+    this.camScrollY = (ty + 0.5) * TILE - (cam.height / this.camZoom) / 2;
+    const clamped = clampScroll(this.camScrollX, this.camScrollY, this.camZoom,
+      cam.width, cam.height, this.mapPxW, this.mapPxH);
+    this.camScrollX = clamped.x;
+    this.camScrollY = clamped.y;
+    cam.setScroll(this.camScrollX, this.camScrollY);
   }
 
   private drawTempOverlay() {
@@ -194,18 +156,6 @@ export class WorldScene extends Phaser.Scene {
         this.tempLayer.fillStyle((r_ << 16) | (0x30 << 8) | bl, 0.35);
         this.tempLayer.fillRect(x * TILE, y * TILE, TILE - 1, TILE - 1);
       }
-    }
-  }
-
-  private spawnDots() {
-    this.dotLayer.removeAll(true);
-    this.dots = [];
-    for (const c of this.state.colonists) {
-      if (!c.alive) continue;
-      const go = this.add.circle(c.pos.x * TILE + TILE / 2, c.pos.y * TILE + TILE / 2, 4, TASK_COLOR[c.task]);
-      go.setStrokeStyle(1, 0x000000, 0.4);
-      this.dotLayer.add(go);
-      this.dots.push({ go, ref: c });
     }
   }
 
@@ -296,7 +246,10 @@ export class WorldScene extends Phaser.Scene {
       }
       case 'toggleTempOverlay': this.tempOverlay = !!msg.payload?.value; break;
       case 'restart':
-        this.lastBuildSig = '';
+        this.chunks?.destroy();
+        this.water?.destroy();
+        this.sprites?.destroy();
+        this.minimap?.destroy();
         this.scene.restart({ state: createColony(randomSeed()), ctx: this.ctx });
         return;
     }
@@ -334,17 +287,12 @@ export class WorldScene extends Phaser.Scene {
     cam.setZoom(this.camZoom);
     cam.setScroll(this.camScrollX, this.camScrollY);
 
-    // Redraw culled map + temp overlay every frame
-    this.redrawMap();
-    this.syncBuildings();
-    this.drawTempOverlay();
-
-    if (this.dots.filter((d) => d.ref.alive).length !== alive(s).length) this.spawnDots();
-    for (const d of this.dots) {
-      d.go.setPosition(d.ref.pos.x * TILE + TILE / 2, d.ref.pos.y * TILE + TILE / 2);
-      d.go.setFillStyle(TASK_COLOR[d.ref.task] ?? 0x8aa884);
-      d.go.setAlpha(d.ref.health < 35 ? 0.45 : 0.95);
-    }
+    // Render modules
+    this.chunks.update();
+    this.water.update(this.time.now);
+    this.sprites.update();
+    this.minimap.update();
+    if (this.tempOverlay) this.drawTempOverlay(); else this.tempLayer.clear();
 
     this.emitAccum += delta;
     if (this.emitAccum >= 150) {
@@ -382,5 +330,9 @@ export class WorldScene extends Phaser.Scene {
     this.input.off('pointerup', this.onPointerUp, this);
     this.input.off('pointerupoutside', this.onPointerUp, this);
     this.input.off('wheel');
+    this.chunks?.destroy();
+    this.water?.destroy();
+    this.sprites?.destroy();
+    this.minimap?.destroy();
   }
 }
