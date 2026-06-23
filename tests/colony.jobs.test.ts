@@ -2,8 +2,20 @@ import { describe, expect, it } from 'vitest';
 import { createColony } from '@/games/colony/domain/createColony';
 import { runJobScheduler } from '@/games/colony/systems/jobScheduler';
 import type { Building } from '@/games/colony/domain/types';
-import { MAP_W, MAP_H } from '@/games/colony/data/balance';
-import { setNode } from '@/games/colony/systems/grid';
+import { setNode, passableAt } from '@/games/colony/systems/grid';
+import { pickStartSite } from '@/games/colony/domain/worldgen';
+
+// Find a passable tile near the start site to anchor buildings.
+// MAP_W/2,MAP_H/2 is unreliable on a 256² world (may be water/mountain).
+function nearbyPassable(s: ReturnType<typeof createColony>, dx: number, dy: number): { x: number; y: number } {
+  const start = pickStartSite(s.map);
+  // Walk outward in the requested direction until we land on a passable tile.
+  for (let r = 1; r <= 10; r++) {
+    const x = start.x + dx * r, y = start.y + dy * r;
+    if (passableAt(s.map, x, y)) return { x, y };
+  }
+  return start; // fallback (start itself is always passable)
+}
 
 const farmAt = (x: number, y: number): Building => ({
   id: 'farm1', type: 'farm', tile: { x, y }, workSlots: 3, jobType: 'farm',
@@ -13,9 +25,8 @@ const farmAt = (x: number, y: number): Building => ({
 describe('job scheduler', () => {
   it('assigns an idle colonist to an available farm', () => {
     const s = createColony(1);
-    const cx = Math.floor(MAP_W / 2);
-    const cy = Math.floor(MAP_H / 2);
-    s.buildings.push(farmAt(cx + 1, cy));
+    const t = nearbyPassable(s, 1, 0);
+    s.buildings.push(farmAt(t.x, t.y));
     s.colonists.forEach((c) => { c.task = 'idle'; c.priorities.farm = 3; });
     runJobScheduler(s);
     const working = s.colonists.filter((c) => c.targetBuildingId === 'farm1');
@@ -25,9 +36,8 @@ describe('job scheduler', () => {
 
   it('never assigns more workers than the building has slots', () => {
     const s = createColony(1);
-    const cx = Math.floor(MAP_W / 2);
-    const cy = Math.floor(MAP_H / 2);
-    s.buildings.push(farmAt(cx + 1, cy));
+    const t = nearbyPassable(s, 1, 0);
+    s.buildings.push(farmAt(t.x, t.y));
     s.colonists.forEach((c) => { c.task = 'idle'; c.priorities.farm = 3; c.priorities.woodcut = 0; c.priorities.research = 0; c.priorities.build = 0; });
     runJobScheduler(s);
     expect(s.colonists.filter((c) => c.targetBuildingId === 'farm1').length).toBeLessThanOrEqual(3);
@@ -45,8 +55,8 @@ describe('job scheduler', () => {
 
   it('assigns a colonist to a tailor bench', () => {
     const s = createColony(1);
-    const cx = Math.floor(MAP_W / 2), cy = Math.floor(MAP_H / 2);
-    s.buildings.push({ id: 't1', type: 'tailor', tile: { x: cx + 1, y: cy }, workSlots: 2, jobType: 'tailor', built: true, buildProgress: 30, buildRequired: 30 });
+    const t = nearbyPassable(s, 1, 0);
+    s.buildings.push({ id: 't1', type: 'tailor', tile: { x: t.x, y: t.y }, workSlots: 2, jobType: 'tailor', built: true, buildProgress: 30, buildRequired: 30 });
     s.colonists.forEach((c) => { c.task = 'idle'; (['farm','woodcut','research','build','tailor'] as const).forEach((j) => (c.priorities[j] = 0)); c.priorities.tailor = 3; });
     runJobScheduler(s);
     expect(s.colonists.some((c) => c.targetBuildingId === 't1' && c.task === 'goto_work')).toBe(true);

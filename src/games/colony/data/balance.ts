@@ -1,7 +1,7 @@
 import type { Biome, BuildingType, JobType, ResourceId } from '../domain/types';
 
-export const MAP_W = 28;
-export const MAP_H = 28;
+export const MAP_W = 256;
+export const MAP_H = 256;
 export const TILE = 22;               // пиксели на тайл (рендер)
 export const TICKS_PER_DAY = 240;
 export const SIM_TPS = 8;             // тиков/сек при 1×
@@ -108,18 +108,18 @@ export const COLONIST_NAMES = [
 // ---- План B: масштаб/иерархия ----
 export const CLUSTER = 16;            // сторона кластера (тайлы) — pathHierarchy + spatialIndex
 
-// ---- Генерация мира (План A: 28²; План B поднимет MAP до 256) ----
+// ---- Генерация мира (План B: 256²) ----
 export const GEN = {
-  elevScale: 7,        // делитель координат для шума высоты (крупнее = плавнее)
-  moistScale: 6,
+  elevScale: 42,       // крупнее = более плавные континенты на 256²
+  moistScale: 36,
   waterLevel: 0.34,    // elevation < — вода
   marshMax: 0.39,      // < и влажно — болото
   rockMin: 0.60,       // > — скалы
   mountainMin: 0.70,   // > — горы (непроходимо)
   forestMoist: 0.60,   // влажность > в средней высоте — лес
   meadowMoist: 0.44,   // влажность > — луга
-  riverCount: 3,       // рек на карту
-  riverMaxSteps: 200,
+  riverCount: 12,      // рек на карту
+  riverMaxSteps: 1500,
   // плотности залежей (вероятность узла на подходящем тайле)
   pStone: 0.05, pIron: 0.018, pGold: 0.004, pClay: 0.05, pBerries: 0.03, pFish: 0.04,
   woodMin: 20, woodMax: 50,   // запас узла дерева
