@@ -7,9 +7,17 @@ export interface LobbyResult {
   isHost: boolean;
 }
 
-export function LobbyScreen({ onStart }: { onStart: (r: LobbyResult) => void }) {
+export function LobbyScreen({
+  onStart,
+  initialCode,
+  onExitToPortal,
+}: {
+  onStart: (r: LobbyResult) => void;
+  initialCode?: string;
+  onExitToPortal?: () => void;
+}) {
   const [name, setName] = useState('');
-  const [code, setCode] = useState('');
+  const [code, setCode] = useState(initialCode ?? '');
   const ready = name.trim().length > 0;
 
   const create = () => onStart({ name: name.trim(), code: makeRoomCode(Math.random), isHost: true });
@@ -20,6 +28,9 @@ export function LobbyScreen({ onStart }: { onStart: (r: LobbyResult) => void }) 
 
   return (
     <div style={{ maxWidth: 420, margin: '60px auto', color: '#e8e0ff', font: '14px monospace' }}>
+      {onExitToPortal && (
+        <button onClick={onExitToPortal} style={{ marginBottom: 12 }}>← В портал</button>
+      )}
       <h2>Зеркальная Ложа — лобби</h2>
       <label style={{ display: 'block', margin: '12px 0 4px' }}>Имя</label>
       <input value={name} onChange={(e) => setName(e.target.value)} style={{ width: '100%' }} />

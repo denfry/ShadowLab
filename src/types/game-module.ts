@@ -2,7 +2,7 @@ import type { ComponentType } from 'react';
 import type { GameEventBus } from '@/core/events/EventBus';
 import type { SettingsSave } from './save';
 
-export type GameId = 'shadow-trace' | 'colony';
+export type GameId = 'shadow-trace' | 'colony' | 'lodge';
 export type GameTheme = 'colony' | 'shadow';
 export type LaunchMode = 'new' | 'load';
 
