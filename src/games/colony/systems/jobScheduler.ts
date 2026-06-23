@@ -1,6 +1,6 @@
 import type { Building, Colonist, ColonyState, JobType, Pt, Tile } from '../domain/types';
 import { findPath } from './pathfinding';
-import { tileAt } from './grid';
+import { tileAt, findNearestNode } from './grid';
 
 const tileOf = (c: Colonist): Pt => ({ x: Math.round(c.pos.x), y: Math.round(c.pos.y) });
 const dist = (a: Pt, b: Pt) => Math.abs(a.x - b.x) + Math.abs(a.y - b.y);
@@ -37,14 +37,8 @@ function findTarget(s: ColonyState, from: Pt, job: JobType): { tile: Pt; buildin
     return best ? { tile: best.tile, buildingId: best.id } : null;
   }
   if (job === 'woodcut') {
-    let best: Tile | undefined;
-    let bestD = Infinity;
-    for (const t of s.map.tiles) {
-      if (t.terrain !== 'forest' || (t.wood ?? 0) <= 0) continue;
-      const d = dist(from, t);
-      if (d < bestD) { bestD = d; best = t; }
-    }
-    return best ? { tile: { x: best.x, y: best.y } } : null;
+    const tile = findNearestNode(s.map, from, 'wood');
+    return tile ? { tile } : null;
   }
   return null;
 }
