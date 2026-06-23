@@ -19,6 +19,7 @@ const DEPTH_GFX = 9001;
 export class Minimap {
   private img: Phaser.GameObjects.Image;
   private gfx: Phaser.GameObjects.Graphics;
+  private border!: Phaser.GameObjects.Graphics;
 
   /** Screen-space origin of the minimap image (top-left corner). */
   private originX: number;
@@ -98,7 +99,7 @@ export class Minimap {
     borderGfx.strokeRect(this.originX, this.originY, MINIMAP_PX, MINIMAP_PX);
     // We keep border separate but destroy it with the rest in destroy().
     // Store reference so destroy() can clean it up.
-    (this as any)._border = borderGfx;
+    this.border = borderGfx;
 
     // ---- Graphics for dots + viewport rect (reused each frame) ----
     this.gfx = scene.add.graphics()
@@ -192,7 +193,7 @@ export class Minimap {
 
     this.img.destroy();
     this.gfx.destroy();
-    ((this as any)._border as Phaser.GameObjects.Graphics | undefined)?.destroy();
+    this.border.destroy();
 
     if (this.scene.textures.exists(MINIMAP_TEX_KEY)) {
       this.scene.textures.remove(MINIMAP_TEX_KEY);
