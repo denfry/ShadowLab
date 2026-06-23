@@ -64,8 +64,10 @@ export class LodgeSession {
   }
 
   private authorize(from: string, puzzleId: string, event: PuzzleEvent): void {
+    const role = this.roles[from];
+    if (!role) return; // ignore intents from peers not in the room
     const seq = ++this.seqCounter;
-    const lodgeEvent: LodgeEvent = { seq, puzzleId, by: this.roles[from] ?? 'A', event };
+    const lodgeEvent: LodgeEvent = { seq, puzzleId, by: role, event };
     this.cb.applyServerEvent(lodgeEvent);
     this.lastSeq = seq;
     const rs = this.cb.getRunState();
