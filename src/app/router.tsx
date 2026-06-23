@@ -12,7 +12,7 @@ import { SettingsPage } from '@/pages/settings/SettingsPage';
 import { AboutPage } from '@/pages/about/AboutPage';
 import { LoginPage } from '@/pages/login/LoginPage';
 
-const LodgeDevHarness = lazy(() => import('@/games/lodge/dev/LodgeDevHarness'));
+const LodgeDevHarness = lazy(() => import('@/games/lodge/dev/LodgeDevEntry'));
 
 function NotFound() {
   return (

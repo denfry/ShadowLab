@@ -8,6 +8,7 @@ import {
   type Difficulty,
   type Role,
   type PuzzleEvent,
+  type LodgeEvent,
 } from '@/games/lodge/engine';
 
 export interface LodgeStore {
@@ -19,6 +20,8 @@ export interface LodgeStore {
   select: (puzzleId: string | null) => void;
   dispatch: (puzzleId: string, by: Role, event: PuzzleEvent) => void;
   autoSolve: (puzzleId: string) => void;
+  applyServerEvent: (lodgeEvent: LodgeEvent) => void;
+  setRunState: (runState: RunState) => void;
 }
 
 const DEFAULT_SEED = 1;
@@ -56,5 +59,14 @@ export const useLodgeStore = create<LodgeStore>((set, get) => ({
     for (const ev of ARCHETYPES[puzzle.archetypeId].solutionEvents(puzzle)) {
       get().dispatch(puzzleId, puzzle.lockOwner, ev);
     }
+  },
+
+  applyServerEvent(lodgeEvent) {
+    const { runState } = get();
+    set({ runState: applyEvent(runState, lodgeEvent) });
+  },
+
+  setRunState(runState) {
+    set({ runState, selectedPuzzleId: runState.run.puzzles[0]?.id ?? null });
   },
 }));
