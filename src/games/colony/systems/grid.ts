@@ -45,6 +45,9 @@ export function createMap(w: number, h: number): ColonyMap {
 // --- Чтения ---
 export const biomeAt = (m: ColonyMap, x: number, y: number): Biome | undefined =>
   inBounds(x, y, m) ? BIOMES[m.biome[idx(x, y, m.w)]] : undefined;
+/** Cheap numeric biome code for hashing (used by ChunkRenderer.chunkSig). */
+export const biomeCodeAt = (m: ColonyMap, x: number, y: number): number =>
+  inBounds(x, y, m) ? m.biome[idx(x, y, m.w)] : 0;
 export const elevationAt = (m: ColonyMap, x: number, y: number): number =>
   inBounds(x, y, m) ? m.elevation[idx(x, y, m.w)] : 0;
 export const fertilityAt = (m: ColonyMap, x: number, y: number): number =>
