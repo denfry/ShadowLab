@@ -2,6 +2,8 @@
 import type { Biome, Building, Colonist, ColonyState, LogEntry, Resource, ResourceId, ResourceNode, Room } from './types';
 import { regenerateWorld } from './worldgen';
 import { idx, setBuildingId, setPassable, setBiome, setNode, biomeAt, nodeAt, forEachTile } from '../systems/grid';
+import { buildNav } from '../systems/pathHierarchy';
+import { CLUSTER } from '../data/balance';
 
 export interface TileOverride { i: number; biome?: Biome; node?: ResourceNode | null; }
 
@@ -21,6 +23,7 @@ export interface ColonySave {
   tailorProgress: number;
   stock: { clothing: number };
   env: ColonyState['env'];
+  assignCursor: number;
   log: LogEntry[];
   flags: { gameOver: boolean; victory: boolean };
   overrides: TileOverride[];
@@ -63,6 +66,7 @@ export function toSave(s: ColonyState): ColonySave {
     tailorProgress: s.tailorProgress,
     stock: s.stock,
     env: s.env,
+    assignCursor: s.assignCursor,
     log: s.log,
     flags: s.flags,
     overrides: diffOverrides(s),
@@ -83,6 +87,7 @@ export function fromSave(p: ColonySave): ColonyState {
     setBuildingId(map, b.tile.x, b.tile.y, b.id);
     if (b.type === 'wall') setPassable(map, b.tile.x, b.tile.y, false);
   }
+  const nav = buildNav(map, CLUSTER);
   return {
     version: p.version,
     seed: p.seed,
@@ -100,6 +105,8 @@ export function fromSave(p: ColonySave): ColonyState {
     stock: p.stock,
     env: p.env,
     map,
+    nav,
+    assignCursor: p.assignCursor ?? 0,
     log: p.log,
     flags: p.flags,
   };

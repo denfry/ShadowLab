@@ -9,6 +9,7 @@ import {
 } from '../data/balance';
 import { tempAt } from './grid';
 import { findPath } from './pathfinding';
+import { cachedFindPathHier } from './pathHierarchy';
 
 const tileOf = (c: Colonist): Pt => ({ x: Math.round(c.pos.x), y: Math.round(c.pos.y) });
 
@@ -24,7 +25,7 @@ function nearestBuilding(s: ColonyState, from: Pt, type: Building['type']): Buil
 }
 
 function routeTo(s: ColonyState, c: Colonist, target: Pt, task: Colonist['task']): void {
-  const path = findPath(s.map, tileOf(c), target);
+  const path = s.nav ? cachedFindPathHier(s.map, s.nav, tileOf(c), target) : findPath(s.map, tileOf(c), target);
   if (path === null) return; // недостижимо — остаёмся как есть
   c.targetTile = target;
   c.path = path;

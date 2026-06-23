@@ -1,5 +1,6 @@
 import type { Building, Colonist, ColonyState, JobType, Pt } from '../domain/types';
 import { findPath } from './pathfinding';
+import { cachedFindPathHier } from './pathHierarchy';
 import { tileAt } from './grid';
 import { buildIndex, nearest, type SpatialIndex } from './spatialIndex';
 import { CLUSTER } from '../data/balance';
@@ -77,7 +78,7 @@ export function runJobScheduler(s: ColonyState): void {
     for (const job of jobs) {
       const target = findTarget(s, from, job, ix, byTile);
       if (!target) continue;
-      const path = findPath(s.map, from, target.tile);
+      const path = s.nav ? cachedFindPathHier(s.map, s.nav, from, target.tile) : findPath(s.map, from, target.tile);
       if (path === null) continue;
       c.targetTile = target.tile; c.targetBuildingId = target.buildingId;
       c.path = path; c.task = 'goto_work'; break;

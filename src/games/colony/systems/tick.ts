@@ -7,6 +7,7 @@ import { runWork } from './work';
 import { advanceSeason, updateOutdoorTemp } from './season';
 import { recomputeRooms, wallsDoorsSig } from './rooms';
 import { runTemperature } from './temperature';
+import { rebuildDirty } from './pathHierarchy';
 import { Rng } from '@/core/utils/rng';
 
 export const alive = (s: ColonyState) => s.colonists.filter((c) => c.alive);
@@ -24,6 +25,7 @@ export function tick(s: ColonyState): boolean {
   runTemperature(s);
 
   runNeeds(s);
+  if (s.nav) rebuildDirty(s.nav, s.map);
   runJobScheduler(s);
   stepAgents(s);
   runWork(s);

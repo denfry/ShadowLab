@@ -3,9 +3,10 @@ import { makeId } from '@/core/utils';
 import type { Colonist, ColonyState, JobType, TraitId } from './types';
 import { emptySkills } from './skills';
 import { TRAIT_IDS } from './traits';
-import { COLONIST_NAMES, START_COLONISTS, START_RESOURCES, SEASON_BASE_TEMP } from '../data/balance';
+import { COLONIST_NAMES, START_COLONISTS, START_RESOURCES, SEASON_BASE_TEMP, CLUSTER } from '../data/balance';
 import { regenerateWorld, pickStartSite } from './worldgen';
 import { passableAt } from '../systems/grid';
+import { buildNav } from '../systems/pathHierarchy';
 
 const JOB_TYPES: JobType[] = ['farm', 'woodcut', 'research', 'build', 'tailor'];
 
@@ -19,6 +20,7 @@ function startingPriorities(): Record<JobType, number> {
 export function createColony(seed: number): ColonyState {
   const rng = new Rng(seed);
   const map = regenerateWorld(seed);
+  const nav = buildNav(map, CLUSTER);
   const start = pickStartSite(map);
 
   // Раскладываем колонистов по проходимым тайлам кольцами вокруг старт-площадки.
@@ -60,7 +62,7 @@ export function createColony(seed: number): ColonyState {
   });
 
   return {
-    version: 5,
+    version: 6,
     seed,
     rngState: rng.seed,
     tick: 0,
@@ -80,6 +82,8 @@ export function createColony(seed: number): ColonyState {
     stock: { clothing: 0 },
     env: { season: 'spring', dayInSeason: 0, outdoorTemp: SEASON_BASE_TEMP.spring, weather: 'clear' },
     map,
+    nav,
+    assignCursor: 0,
     log: [{ day: 1, text: 'Колония основана. Удачи.', tone: 'neutral' }],
     flags: { gameOver: false, victory: false },
   };

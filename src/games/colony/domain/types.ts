@@ -93,6 +93,8 @@ export interface ColonyState {
     weather: 'clear' | 'snow' | 'cold_snap';
   };
   map: import('../systems/grid').ColonyMap;
+  nav?: import('../systems/pathHierarchy').Nav; // derived, NOT serialized
+  assignCursor: number; // time-slice cursor (Task 11), serialized for exact resume
   log: LogEntry[];
   flags: { gameOver: boolean; victory: boolean };
 }

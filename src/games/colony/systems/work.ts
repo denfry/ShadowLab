@@ -9,6 +9,7 @@ import {
 } from '../data/balance';
 import { fertilityAt, tempAt, nodeAt, depleteNode, setBiome, setBuildingId, setPassable } from './grid';
 import { coldWorkFactor } from './needs';
+import { markDirtyAt } from './pathHierarchy';
 
 const workSpeed = (c: Colonist): number =>
   c.traits.reduce((m, t) => m * (TRAITS[t]?.workSpeed ?? 1), 1);
@@ -48,7 +49,7 @@ export function runWork(s: ColonyState): void {
       if (building.buildProgress >= building.buildRequired) {
         building.built = true;
         setBuildingId(s.map, building.tile.x, building.tile.y, building.id);
-        if (building.type === 'wall') setPassable(s.map, building.tile.x, building.tile.y, false);
+        if (building.type === 'wall') { setPassable(s.map, building.tile.x, building.tile.y, false); if (s.nav) markDirtyAt(s.nav, building.tile.x, building.tile.y); }
         applyStorageCapacity(s);
         s.log.push({ day: s.day, text: `Построено: ${building.type}.`, tone: 'good' });
         finishWork(c);
