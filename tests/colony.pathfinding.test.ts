@@ -36,4 +36,17 @@ describe('A* pathfinding', () => {
     const g = grid(3, 3);
     expect(findPath(g, { x: 1, y: 1 }, { x: 1, y: 1 })).toEqual([]);
   });
+
+  it('finds an optimal-length path around a wall on a larger grid', () => {
+    const m = createMap(40, 40);
+    for (let y = 0; y < 38; y++) setPassable(m, 20, y, false); // vertical wall, gap at bottom
+    const path = findPath(m, { x: 0, y: 0 }, { x: 39, y: 0 })!;
+    expect(path).not.toBeNull();
+    // last point is the goal; every step is 4-adjacent and (except goal) passable
+    expect(path[path.length - 1]).toEqual({ x: 39, y: 0 });
+    for (let k = 0; k < path.length; k++) {
+      const prev = k === 0 ? { x: 0, y: 0 } : path[k - 1];
+      expect(Math.abs(path[k].x - prev.x) + Math.abs(path[k].y - prev.y)).toBe(1);
+    }
+  });
 });
