@@ -131,3 +131,5 @@ export const BIOME_FERTILITY: Record<Biome, number> = {
 };
 
 export const PATH_LEN_BOUND_K = 1.6; // тест: длина иерархического пути <= K * оптимум
+
+export const PATH_CACHE_MAX = 1024;  // граница кеша путей: при переполнении — полный сброс

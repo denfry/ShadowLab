@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { createMap, setPassable } from '@/games/colony/systems/grid';
 import { detectPortals, clusterIdOf, buildNav, localDistance } from '@/games/colony/systems/pathHierarchy';
 import { findPathHier } from '@/games/colony/systems/pathHierarchy';
+import { markDirtyAt, rebuildDirty, cachedFindPathHier } from '@/games/colony/systems/pathHierarchy';
 import { findPath } from '@/games/colony/systems/pathfinding';
 import { PATH_LEN_BOUND_K } from '@/games/colony/data/balance';
 
@@ -74,6 +75,22 @@ describe('findPathHier', () => {
     expect(hier).not.toBeNull();
     expect(valid(m, start, hier, goal)).toBe(true);
     expect(hier.length).toBeLessThanOrEqual(Math.ceil(opt.length * PATH_LEN_BOUND_K));
+  });
+});
+
+describe('path cache + dirty invalidation', () => {
+  it('cache returns equal paths and invalidates after a wall is built', () => {
+    const m = createMap(48, 16); // 3x1 clusters
+    const nav = buildNav(m, 16);
+    const start = { x: 1, y: 8 }, goal = { x: 46, y: 8 };
+    const p1 = cachedFindPathHier(m, nav, start, goal)!;
+    const p2 = cachedFindPathHier(m, nav, start, goal)!;
+    expect(p2).toEqual(p1); // served from cache, identical
+    // wall off the middle cluster's borders -> goal unreachable
+    for (let y = 0; y < 16; y++) { setPassable(m, 31, y, false); setPassable(m, 32, y, false); }
+    markDirtyAt(nav, 31, 8); markDirtyAt(nav, 32, 8);
+    rebuildDirty(nav, m);
+    expect(cachedFindPathHier(m, nav, start, goal)).toBeNull();
   });
 });
 

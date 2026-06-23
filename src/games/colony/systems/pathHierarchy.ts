@@ -1,6 +1,7 @@
 import type { Pt } from '../domain/types';
 import { type ColonyMap, passableAt, neighbors4 } from './grid';
 import { findPath } from './pathfinding';
+import { PATH_CACHE_MAX } from '../data/balance';
 
 export interface Portal { id: number; x: number; y: number; cluster: number; }
 export interface Nav {
@@ -229,6 +230,40 @@ export function findPathHier(m: ColonyMap, nav: Nav, start: Pt, goal: Pt): Pt[] 
     curPt = target;
   }
   return out;
+}
+
+const cacheKey = (s: Pt, g: Pt) => `${s.x},${s.y}|${g.x},${g.y}`;
+
+export function cachedFindPathHier(m: ColonyMap, nav: Nav, start: Pt, goal: Pt): Pt[] | null {
+  const k = cacheKey(start, goal);
+  if (nav.pathCache.has(k)) {
+    const hit = nav.pathCache.get(k)!;
+    return hit === null ? null : hit.map((p) => ({ ...p }));
+  }
+  const res = findPathHier(m, nav, start, goal);
+  if (nav.pathCache.size >= PATH_CACHE_MAX) nav.pathCache.clear(); // simple bound: flush when full
+  nav.pathCache.set(k, res === null ? null : res.map((p) => ({ ...p })));
+  return res === null ? null : res.map((p) => ({ ...p }));
+}
+
+export function markDirtyAt(nav: Nav, x: number, y: number): void {
+  nav.dirty.add(clusterIdOf(x, y, nav));
+  nav.pathCache.clear(); // any passability change can invalidate any cached path
+}
+
+/** Пересчёт порталов+intra для грязных кластеров (и их затронутых соседей). */
+export function rebuildDirty(nav: Nav, m: ColonyMap): void {
+  if (nav.dirty.size === 0) return;
+  // Простая корректная стратегия: полный пересчёт nav при наличии грязных кластеров,
+  // но границы малы и события редки (стройка/добыча). Меняем содержимое nav на месте.
+  const fresh = buildNav(m, nav.clusterSize);
+  nav.portals = fresh.portals;
+  nav.portalsByCluster = fresh.portalsByCluster;
+  nav.interEdges = fresh.interEdges;
+  nav.intraEdges = fresh.intraEdges;
+  nav.clustersW = fresh.clustersW; nav.clustersH = fresh.clustersH;
+  nav.pathCache.clear();
+  nav.dirty.clear();
 }
 
 /** Находит макс. сегменты, где open(i)==true на [lo,hi); вызывает emit(середина сегмента). */
