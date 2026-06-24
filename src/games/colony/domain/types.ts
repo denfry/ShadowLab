@@ -7,7 +7,7 @@ export type SkillId =
   | 'farming' | 'woodcutting' | 'mining' | 'building' | 'research'
   | 'cooking' | 'medicine' | 'shooting' | 'melee';
 export type TraitId = 'hardworker' | 'frail' | 'lazy' | 'optimist' | 'bloodlust' | 'clumsy';
-export type BuildingType = 'farm' | 'bedroom' | 'storage' | 'lab' | 'wall' | 'door' | 'heater' | 'tailor';
+export type BuildingType = 'farm' | 'bedroom' | 'storage' | 'lab' | 'wall' | 'door' | 'heater' | 'tailor' | 'bridge' | 'tunnel';
 /** Назначаемые игроком категории работ (приоритеты 0..3). */
 export type JobType = 'farm' | 'woodcut' | 'mine' | 'forage' | 'research' | 'build' | 'tailor';
 /** Конечный автомат поведения колониста. */

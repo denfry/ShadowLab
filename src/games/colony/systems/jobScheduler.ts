@@ -1,7 +1,7 @@
 import type { Building, Colonist, ColonyState, JobType, NodeKind, Pt } from '../domain/types';
 import { findPath } from './pathfinding';
 import { cachedFindPathHier } from './pathHierarchy';
-import { tileAt } from './grid';
+import { tileAt, passableAt, nearestPassableAdjacent } from './grid';
 import { buildIndex, nearest, type SpatialIndex } from './spatialIndex';
 import { CLUSTER, ASSIGN_BUDGET } from '../data/balance';
 
@@ -58,7 +58,9 @@ function findTarget(
     });
     if (!t) return null;
     const b = byTile.get(`${t.x},${t.y}`)!;
-    return { tile: b.tile, buildingId: b.id };
+    const tile = passableAt(s.map, b.tile.x, b.tile.y) ? b.tile : nearestPassableAdjacent(s.map, b.tile.x, b.tile.y);
+    if (!tile) return null; // непроходимо и нет прохода — пропускаем
+    return { tile, buildingId: b.id };
   }
   if (job === 'woodcut' || job === 'mine' || job === 'forage') {
     const cat = job === 'woodcut' ? 'node:wood' : job === 'forage' ? 'node:berries' : 'node:ore';

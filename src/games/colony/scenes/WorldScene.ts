@@ -4,7 +4,7 @@ import type { BuildingType, ColonyState, Colonist } from '../domain/types';
 import { TILE } from '../data/balance';
 import { tick, alive } from '../systems/tick';
 import { computeHud } from '../systems/projection';
-import { placeBlueprint, canPlace } from '../systems/build';
+import { placeBlueprint, canPlaceType } from '../systems/build';
 import { tempAt } from '../systems/grid';
 import { createColony } from '../domain/createColony';
 import { toSave } from '../domain/save';
@@ -199,7 +199,7 @@ export class WorldScene extends Phaser.Scene {
     if (this.minimap?.contains(p.x, p.y)) return;
     if (this.placingType) {
       const t = this.worldToTile(p.x, p.y);
-      const ok = canPlace(this.state, t.x, t.y);
+      const ok = canPlaceType(this.state, this.placingType, t.x, t.y);
       this.ghost.setPosition(t.x * TILE + TILE / 2, t.y * TILE + TILE / 2);
       this.ghost.setFillStyle(ok ? 0x84de5a : 0xff5a5a, 0.3);
       this.ghost.setVisible(true);
