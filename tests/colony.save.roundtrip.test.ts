@@ -2,7 +2,7 @@
 import { describe, it, expect } from 'vitest';
 import { createColony } from '@/games/colony/domain/createColony';
 import { toSave, fromSave } from '@/games/colony/domain/save';
-import { nodeAt, biomeAt, setNode, setBiome, passableAt, buildingIdAt, forEachTile } from '@/games/colony/systems/grid';
+import { nodeAt, biomeAt, setNode, setBiome, passableAt, buildingIdAt, forEachTile, setPassable, idx } from '@/games/colony/systems/grid';
 
 describe('save round-trip', () => {
   it('мир регенерируется из сида идентично (биомы)', () => {
@@ -63,5 +63,20 @@ describe('save round-trip', () => {
     const r = fromSave(toSave(s));
     expect(buildingIdAt(r.map, tx, ty)).toBe('b1');
     expect(passableAt(r.map, tx, ty)).toBe(false);
+  });
+});
+
+describe('save: designations + new resources + bridge passability', () => {
+  it('round-trips designations, resources, and bridge passability', () => {
+    const s = createColony(99);
+    setNode(s.map, 12, 12, { kind: 'stone', amount: 10, max: 10 });
+    s.designations.add(idx(12, 12, s.map.w));
+    s.resources.stone.amount = 42;
+    setBiome(s.map, 13, 13, 'water'); setPassable(s.map, 13, 13, false);
+    s.buildings.push({ id: 'br', type: 'bridge', tile: { x: 13, y: 13 }, workSlots: 0, jobType: undefined, built: true, buildProgress: 15, buildRequired: 15 });
+    const r = fromSave(toSave(s));
+    expect(r.designations.has(idx(12, 12, r.map.w))).toBe(true);
+    expect(r.resources.stone.amount).toBe(42);
+    expect(passableAt(r.map, 13, 13)).toBe(true);
   });
 });
