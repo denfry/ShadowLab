@@ -95,6 +95,7 @@ export interface ColonyState {
   map: import('../systems/grid').ColonyMap;
   nav?: import('../systems/pathHierarchy').Nav; // derived, NOT serialized
   assignCursor: number; // time-slice cursor (Task 11), serialized for exact resume
+  designations: Set<number>; // tile indices marked for harvest (player intent)
   log: LogEntry[];
   flags: { gameOver: boolean; victory: boolean };
 }

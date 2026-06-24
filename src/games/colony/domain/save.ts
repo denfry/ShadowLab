@@ -107,6 +107,7 @@ export function fromSave(p: ColonySave): ColonyState {
     map,
     nav,
     assignCursor: p.assignCursor ?? 0,
+    designations: new Set<number>(), // populated from payload in Task 9
     log: p.log,
     flags: p.flags,
   };

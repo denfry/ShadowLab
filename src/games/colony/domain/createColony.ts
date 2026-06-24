@@ -88,6 +88,7 @@ export function createColony(seed: number): ColonyState {
     map,
     nav,
     assignCursor: 0,
+    designations: new Set<number>(),
     log: [{ day: 1, text: 'Колония основана. Удачи.', tone: 'neutral' }],
     flags: { gameOver: false, victory: false },
   };
