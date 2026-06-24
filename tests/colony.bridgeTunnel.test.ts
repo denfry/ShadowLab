@@ -3,6 +3,7 @@ import { createColony } from '@/games/colony/domain/createColony';
 import { canPlaceType, placeBlueprint } from '@/games/colony/systems/build';
 import { setBiome, forEachTile, biomeAt, setPassable, passableAt, nearestPassableAdjacent } from '@/games/colony/systems/grid';
 import { runJobScheduler } from '@/games/colony/systems/jobScheduler';
+import { runWork } from '@/games/colony/systems/work';
 
 function findTile(s: ReturnType<typeof createColony>, biome: string): { x: number; y: number } {
   let found = { x: -1, y: -1 };
@@ -54,5 +55,20 @@ describe('build target adjacency', () => {
     const builder = s.colonists.find((c) => c.task === 'goto_work' && c.targetBuildingId);
     expect(builder).toBeDefined();
     expect(passableAt(s.map, builder!.targetTile!.x, builder!.targetTile!.y)).toBe(true);
+  });
+});
+
+describe('bridge/tunnel completion', () => {
+  it('completing a bridge makes the water tile passable', () => {
+    const s = createColony(1);
+    const wx = 50, wy = 50;
+    setBiome(s.map, wx, wy, 'water'); setPassable(s.map, wx, wy, false);
+    const bp = { id: 'br1', type: 'bridge' as const, tile: { x: wx, y: wy }, workSlots: 0, jobType: undefined, built: false, buildProgress: 0, buildRequired: 2 };
+    s.buildings.push(bp);
+    const c = s.colonists[0];
+    c.task = 'work'; c.targetBuildingId = 'br1'; c.targetTile = { x: wx, y: wy }; c.pos = { x: wx + 1, y: wy };
+    for (let i = 0; i < 50 && !bp.built; i++) runWork(s);
+    expect(bp.built).toBe(true);
+    expect(passableAt(s.map, wx, wy)).toBe(true);
   });
 });

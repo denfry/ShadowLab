@@ -61,6 +61,7 @@ export function runWork(s: ColonyState): void {
         building.built = true;
         setBuildingId(s.map, building.tile.x, building.tile.y, building.id);
         if (building.type === 'wall') { setPassable(s.map, building.tile.x, building.tile.y, false); if (s.nav) markDirtyAt(s.nav, building.tile.x, building.tile.y); }
+        if (building.type === 'bridge' || building.type === 'tunnel') { setPassable(s.map, building.tile.x, building.tile.y, true); if (s.nav) markDirtyAt(s.nav, building.tile.x, building.tile.y); }
         applyStorageCapacity(s);
         s.log.push({ day: s.day, text: `Построено: ${building.type}.`, tone: 'good' });
         finishWork(c);
