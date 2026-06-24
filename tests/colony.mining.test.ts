@@ -3,6 +3,8 @@ import { createColony } from '@/games/colony/domain/createColony';
 import { runJobScheduler } from '@/games/colony/systems/jobScheduler';
 import { setNode, idx, setBiome, biomeAt, nodeAt } from '@/games/colony/systems/grid';
 import { runWork } from '@/games/colony/systems/work';
+import { tick } from '@/games/colony/systems/tick';
+import { designate } from '@/games/colony/systems/designations';
 
 describe('mining scheduler', () => {
   it('mine job targets a designated ore node; ignores undesignated', () => {
@@ -53,4 +55,23 @@ describe('mining work', () => {
     runWork(s);
     expect(s.resources.food.amount).toBeGreaterThan(food0);
   });
+});
+
+describe('mining determinism', () => {
+  it('a run with designations + mining is deterministic and exception-free', () => {
+    const build = (seed: number) => {
+      const s = createColony(seed);
+      designate(s, { x0: 0, y0: 0, x1: s.map.w - 1, y1: s.map.h - 1 }, 'mine');
+      designate(s, { x0: 0, y0: 0, x1: s.map.w - 1, y1: s.map.h - 1 }, 'chop');
+      designate(s, { x0: 0, y0: 0, x1: s.map.w - 1, y1: s.map.h - 1 }, 'forage');
+      s.colonists.forEach((c) => { c.priorities.mine = 3; c.priorities.woodcut = 3; c.priorities.forage = 3; });
+      return s;
+    };
+    const a = build(2024), b = build(2024);
+    for (let i = 0; i < 300; i++) { tick(a); tick(b); }
+    expect(a.resources.stone.amount).toBe(b.resources.stone.amount);
+    expect(a.resources.wood.amount).toBe(b.resources.wood.amount);
+    expect(a.colonists.map((c) => `${c.pos.x.toFixed(3)},${c.pos.y.toFixed(3)}`))
+      .toEqual(b.colonists.map((c) => `${c.pos.x.toFixed(3)},${c.pos.y.toFixed(3)}`));
+  }, 30000);
 });

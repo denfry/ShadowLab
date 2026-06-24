@@ -32,7 +32,7 @@ describe('colony save round-trip', () => {
     forEachTile(s.map, (i, x, y) => { if (!woodTile && nodeAt(s.map, x, y)?.kind === 'wood') woodTile = { x, y }; });
     if (woodTile) depleteNode(s.map, woodTile.x, woodTile.y, 3);
     const loaded = fromSave(toSave(s));
-    expect(loaded.version).toBe(6);
+    expect(loaded.version).toBe(7);
     // every tile biome + node matches
     let mismatches = 0;
     forEachTile(s.map, (i, x, y) => {
