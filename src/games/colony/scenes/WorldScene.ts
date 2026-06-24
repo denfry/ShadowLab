@@ -15,6 +15,8 @@ import { ChunkRenderer } from './render/ChunkRenderer';
 import { WaterLayer } from './render/WaterLayer';
 import { SpriteLayer } from './render/SpriteLayer';
 import { Minimap } from './render/Minimap';
+import { DesignationLayer } from './render/DesignationLayer';
+import { designate, type DesignationMode } from '../systems/designations';
 
 const MIN_ZOOM = 0.4;
 const MAX_ZOOM = 3.0;
@@ -38,6 +40,13 @@ export class WorldScene extends Phaser.Scene {
   private water!: WaterLayer;
   private sprites!: SpriteLayer;
   private minimap!: Minimap;
+  private designations!: DesignationLayer;
+
+  // Designation tool (chop/mine/forage/cancel) + drag-rectangle state
+  private tool: DesignationMode | null = null;
+  private selecting = false;
+  private selStartTile = { x: 0, y: 0 };
+  private selRect!: Phaser.GameObjects.Rectangle;
 
   // Camera pan/zoom state
   private camScrollX = 0;
@@ -117,6 +126,7 @@ export class WorldScene extends Phaser.Scene {
     this.water = new WaterLayer(this, this.state);
     this.sprites = new SpriteLayer(this, this.state);
     this.minimap = new Minimap(this, this.state, (tx, ty) => this.centerOnTile(tx, ty));
+    this.designations = new DesignationLayer(this, this.state);
 
     // Temp overlay layer — above water (-900), below Y-sorted sprites (0..~5600).
     this.tempLayer = this.add.graphics().setDepth(-500);
@@ -124,6 +134,10 @@ export class WorldScene extends Phaser.Scene {
     // Ghost always visible above sprites, below minimap (9000).
     this.ghost = this.add.rectangle(0, 0, TILE, TILE, 0xffffff, 0.25).setVisible(false).setDepth(8500);
     this.ghost.setStrokeStyle(1, 0xffffff, 0.6);
+
+    // Designation drag-selection rectangle (top-left origin so size grows from start tile).
+    this.selRect = this.add.rectangle(0, 0, TILE, TILE, 0xffffff, 0.12).setVisible(false).setDepth(8400).setOrigin(0, 0);
+    this.selRect.setStrokeStyle(1, 0xffffff, 0.5);
 
     this.ctx.events.emit('game:state', computeHud(this.state));
   }
@@ -187,6 +201,13 @@ export class WorldScene extends Phaser.Scene {
       this.ctx.events.emit('game:state', computeHud(this.state));
       return;
     }
+    if (this.tool) {
+      const t = this.worldToTile(p.x, p.y);
+      this.selecting = true;
+      this.selStartTile = t;
+      this.selRect.setPosition(t.x * TILE, t.y * TILE).setSize(TILE, TILE).setVisible(true);
+      return;
+    }
     // Start drag-to-pan
     this.isDragging = true;
     this.dragStartX = p.x;
@@ -205,6 +226,13 @@ export class WorldScene extends Phaser.Scene {
       this.ghost.setVisible(true);
       return;
     }
+    if (this.selecting && this.tool) {
+      const t = this.worldToTile(p.x, p.y);
+      const x0 = Math.min(this.selStartTile.x, t.x), y0 = Math.min(this.selStartTile.y, t.y);
+      const x1 = Math.max(this.selStartTile.x, t.x), y1 = Math.max(this.selStartTile.y, t.y);
+      this.selRect.setPosition(x0 * TILE, y0 * TILE).setSize((x1 - x0 + 1) * TILE, (y1 - y0 + 1) * TILE);
+      return;
+    }
     if (!this.isDragging) { this.ghost.setVisible(false); return; }
     // Pan: move scroll opposite to pointer delta, corrected for zoom
     const dx = (p.x - this.dragStartX) / this.camZoom;
@@ -221,6 +249,14 @@ export class WorldScene extends Phaser.Scene {
 
   private onPointerUp = (p: Phaser.Input.Pointer) => {
     if (this.minimap?.contains(p.x, p.y)) return;
+    if (this.selecting && this.tool) {
+      this.selecting = false;
+      this.selRect.setVisible(false);
+      const t = this.worldToTile(p.x, p.y);
+      designate(this.state, { x0: this.selStartTile.x, y0: this.selStartTile.y, x1: t.x, y1: t.y }, this.tool);
+      this.ctx.events.emit('game:state', computeHud(this.state));
+      return;
+    }
     if (!this.isDragging) return;
     this.isDragging = false;
     // If pointer barely moved, treat as a colonist-select click
@@ -243,6 +279,7 @@ export class WorldScene extends Phaser.Scene {
       case 'speed': s.speed = msg.payload.value; break;
       case 'placeBuilding': this.placingType = msg.payload.building as BuildingType; break;
       case 'cancelPlace': this.placingType = null; this.ghost.setVisible(false); break;
+      case 'setTool': this.tool = (msg.payload?.tool ?? null) as DesignationMode | null; this.placingType = null; this.ghost.setVisible(false); break;
       case 'setPriority': {
         const c = s.colonists.find((x) => x.id === msg.payload.colonistId);
         if (c) c.priorities[msg.payload.job as keyof typeof c.priorities] = msg.payload.value;
@@ -254,6 +291,7 @@ export class WorldScene extends Phaser.Scene {
         this.water?.destroy();
         this.sprites?.destroy();
         this.minimap?.destroy();
+        this.designations?.destroy();
         this.scene.restart({ state: createColony(randomSeed()), ctx: this.ctx });
         return;
     }
@@ -295,6 +333,7 @@ export class WorldScene extends Phaser.Scene {
     this.chunks.update();
     this.water.update(this.time.now);
     this.sprites.update();
+    this.designations.update();
     this.minimap.update();
     if (this.tempOverlay) this.drawTempOverlay(); else this.tempLayer.clear();
 
@@ -338,5 +377,6 @@ export class WorldScene extends Phaser.Scene {
     this.water?.destroy();
     this.sprites?.destroy();
     this.minimap?.destroy();
+    this.designations?.destroy();
   }
 }

@@ -35,6 +35,7 @@ const TASK_COLOR: Record<string, number> = {
 const BUILDING_COLOR: Record<string, number> = {
   farm: 0x84de5a, bedroom: 0xf0a840, storage: 0xc8b88a, lab: 0x4ad0ff,
   wall: 0x6b6b63, door: 0xa6895b, heater: 0xff6a3d, tailor: 0xb98bd9,
+  bridge: 0x9c7a4d, tunnel: 0x5a5550,
 };
 
 // ---------------------------------------------------------------------------
