@@ -2,6 +2,8 @@ import { describe, expect, it } from 'vitest';
 import { createColony } from '@/games/colony/domain/createColony';
 import { tick } from '@/games/colony/systems/tick';
 import { TICKS_PER_DAY } from '@/games/colony/data/balance';
+import { pickStartSite } from '@/games/colony/domain/worldgen';
+import { passableAt, neighbors4 } from '@/games/colony/systems/grid';
 
 const run = (seed: number, n: number) => {
   const s = createColony(seed);
@@ -36,6 +38,12 @@ describe('tick orchestration', () => {
 
   it('colonists actually move (positions change) over a day', () => {
     const s = createColony(11);
+    // gathering is zone-gated now → give them a reachable farm to walk to
+    const start = pickStartSite(s.map);
+    let spot = start;
+    for (const n of neighbors4(start.x, start.y, s.map)) { if (passableAt(s.map, n.x, n.y)) { spot = n; break; } }
+    s.buildings.push({ id: 'farmM', type: 'farm', tile: { x: spot.x, y: spot.y }, workSlots: 3, jobType: 'farm', built: true, buildProgress: 30, buildRequired: 30 });
+    s.colonists.forEach((c) => { c.priorities.farm = 3; });
     const before = s.colonists.map((c) => `${c.pos.x.toFixed(2)},${c.pos.y.toFixed(2)}`);
     for (let i = 0; i < TICKS_PER_DAY; i++) tick(s);
     const after = s.colonists.map((c) => `${c.pos.x.toFixed(2)},${c.pos.y.toFixed(2)}`);

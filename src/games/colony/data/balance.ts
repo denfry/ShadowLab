@@ -38,6 +38,8 @@ export const HEALTH_REGEN_PER_TICK = 0.15;
 // Выработка (на тик во время работы)
 export const FARM_BASE = 0.45;        // *skill *(0.5+fertility)
 export const WOODCUT_BASE = 0.5;      // *skill ; забирает дерево из тайла
+export const MINE_BASE = 0.4;         // *skill ; камень/глина/руда
+export const FORAGE_BASE = 0.5;       // *skill ; ягоды → еда
 export const RESEARCH_BASE = 0.3;     // *skill
 export const BUILD_BASE = 0.6;        // *skill ; прогресс блюпринта
 export const XP_PER_WORK_TICK = 0.6;
