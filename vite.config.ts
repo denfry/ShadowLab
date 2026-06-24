@@ -15,7 +15,9 @@ export default defineConfig({
       output: {
         manualChunks: {
           phaser: ['phaser'],
+          three: ['three', '@react-three/fiber', '@react-three/drei'],
           vendor: ['react', 'react-dom', 'react-router-dom'],
+          supabase: ['@supabase/supabase-js'],
         },
       },
     },

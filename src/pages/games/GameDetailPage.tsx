@@ -11,6 +11,8 @@ import { Button } from '@/ui/primitives/Button';
 import { SaveSlotCard } from '@/ui/game/SaveSlotCard';
 import { AchievementBadge } from '@/ui/profile/AchievementBadge';
 import { SectionTitle } from '@/ui/primitives/SectionTitle';
+import { Tag } from '@/ui/primitives/Tag';
+import { StatChip } from '@/ui/primitives/StatChip';
 import { CaseBrowser } from './CaseBrowser';
 import { IconPlay } from '@/ui/icons';
 
@@ -51,10 +53,14 @@ export function GameDetailPage() {
   return (
     <div className="space-y-12" key={tick}>
       {/* Hero */}
-      <section className="scanlines relative overflow-hidden rounded-3xl border border-edge/60 bg-panel/40 p-8 md:p-10">
+      <section className="hero-surface scanlines p-8 md:p-10">
         <div className="absolute -right-20 -top-20 h-64 w-64 rounded-full bg-accent/15 blur-3xl" />
         <div className="relative">
-          <span className="chip mb-4">{scope === 'colony' ? 'STRATEGY · SIM' : 'DETECTIVE · LOGIC'}</span>
+          <span className="mb-4 inline-flex">
+            <Tag tone={scope === 'colony' ? 'good' : 'accent2'}>
+              {scope === 'colony' ? 'стратегия · sim' : 'детектив · logic'}
+            </Tag>
+          </span>
           <h1 className="font-display text-4xl font-bold tracking-wide text-ink neon-text md:text-5xl">
             {def.title}
           </h1>
@@ -62,7 +68,7 @@ export function GameDetailPage() {
           <p className="mt-4 max-w-2xl text-muted">{def.description}</p>
           {scope === 'colony' && (
             <div className="mt-6 flex flex-wrap gap-3">
-              <Button size="lg" icon={<IconPlay width={18} height={18} />} onClick={() => navigate(`/play/${def.id}?new=1`)}>
+              <Button size="lg" variant="solid" icon={<IconPlay width={18} height={18} />} onClick={() => navigate(`/play/${def.id}?new=1`)}>
                 Новая игра
               </Button>
               {autosave && (
@@ -76,9 +82,9 @@ export function GameDetailPage() {
           {/* Records strip */}
           {scope === 'colony' ? (
             <div className="mt-6 flex flex-wrap gap-2">
-              <RecordChip label="лучший день" value={SaveManager.getRecord('colony.bestDay') || '—'} />
-              <RecordChip label="макс. население" value={SaveManager.getRecord('colony.bestPop') || '—'} />
-              <RecordChip label="побед" value={SaveManager.getRecord('colony.victories')} />
+              <StatChip icon="⌬" label={`день ${SaveManager.getRecord('colony.bestDay') || '—'}`} />
+              <StatChip icon="◆" label={`насел. ${SaveManager.getRecord('colony.bestPop') || '—'}`} tone="accent2" />
+              <StatChip icon="⚑" label={`${SaveManager.getRecord('colony.victories')} побед`} tone="warn" />
             </div>
           ) : (
             <p className="mt-5 max-w-2xl rounded-lg border border-edge/60 bg-bg-2/60 p-3 font-mono text-[0.7rem] text-muted">
@@ -130,14 +136,5 @@ export function GameDetailPage() {
         </div>
       </section>
     </div>
-  );
-}
-
-function RecordChip({ label, value }: { label: string; value: number | string }) {
-  return (
-    <span className="chip">
-      <span className="text-ink">{value}</span>
-      <span>{label}</span>
-    </span>
   );
 }
