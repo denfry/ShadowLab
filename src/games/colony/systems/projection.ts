@@ -17,6 +17,10 @@ export function computeHud(s: ColonyState): ColonyHudState {
       food: { ...s.resources.food },
       wood: { ...s.resources.wood },
       science: { ...s.resources.science },
+      stone: { ...s.resources.stone },
+      clay: { ...s.resources.clay },
+      iron: { ...s.resources.iron },
+      gold: { ...s.resources.gold },
     },
     colonists: alive.map((c) => ({
       id: c.id,

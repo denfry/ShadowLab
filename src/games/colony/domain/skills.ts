@@ -1,11 +1,11 @@
 import type { SkillId, Skill } from './types';
 
 export const SKILL_IDS: SkillId[] = [
-  'farming', 'woodcutting', 'building', 'research', 'cooking', 'medicine', 'shooting', 'melee',
+  'farming', 'woodcutting', 'mining', 'building', 'research', 'cooking', 'medicine', 'shooting', 'melee',
 ];
 
 export const SKILL_NAMES: Record<SkillId, string> = {
-  farming: 'Земледелие', woodcutting: 'Лесорубство', building: 'Строительство',
+  farming: 'Земледелие', woodcutting: 'Лесорубство', mining: 'Добыча', building: 'Строительство',
   research: 'Исследования', cooking: 'Готовка', medicine: 'Медицина',
   shooting: 'Стрельба', melee: 'Ближний бой',
 };

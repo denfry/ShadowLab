@@ -14,7 +14,7 @@ import { markDirtyAt } from './pathHierarchy';
 const workSpeed = (c: Colonist): number =>
   c.traits.reduce((m, t) => m * (TRAITS[t]?.workSpeed ?? 1), 1);
 
-const addResource = (s: ColonyState, id: 'food' | 'wood' | 'science', amt: number) => {
+const addResource = (s: ColonyState, id: import('../domain/types').ResourceId, amt: number) => {
   const r = s.resources[id];
   r.amount = clamp(r.amount + amt, 0, r.capacity);
 };
@@ -28,7 +28,7 @@ function finishWork(c: Colonist): void {
 function applyStorageCapacity(s: ColonyState): void {
   const built = s.buildings.filter((b) => b.type === 'storage' && b.built).length;
   const cap = 200 + built * STORAGE_CAPACITY_BONUS;
-  for (const id of ['food', 'wood', 'science'] as const) s.resources[id].capacity = cap;
+  for (const id of ['food', 'wood', 'science', 'stone', 'clay', 'iron', 'gold'] as const) s.resources[id].capacity = cap;
 }
 
 /** Применяет работу для всех колонистов в задаче 'work'. Без RNG. */

@@ -15,6 +15,10 @@ const RES_META: Record<ResourceId, { label: string; glyph: string; tone: 'good' 
   food: { label: 'Еда', glyph: '🌾', tone: 'good' },
   wood: { label: 'Дерево', glyph: '🪵', tone: 'warn' },
   science: { label: 'Наука', glyph: '🔬', tone: 'accent' },
+  stone: { label: 'Камень', glyph: '🪨', tone: 'warn' },
+  clay: { label: 'Глина', glyph: '🧱', tone: 'warn' },
+  iron: { label: 'Железо', glyph: '⛓️', tone: 'accent' },
+  gold: { label: 'Золото', glyph: '🪙', tone: 'accent' },
 };
 
 const SEASON_LABEL: Record<string, string> = {

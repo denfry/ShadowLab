@@ -6,7 +6,9 @@ import { cx } from '@/core/utils';
 const JOBS: { id: JobType; label: string }[] = [
   { id: 'build', label: 'Стройка' },
   { id: 'farm', label: 'Ферма' },
+  { id: 'forage', label: 'Сбор' },
   { id: 'woodcut', label: 'Рубка' },
+  { id: 'mine', label: 'Добыча' },
   { id: 'research', label: 'Наука' },
   { id: 'tailor', label: 'Пошив' },
 ];
