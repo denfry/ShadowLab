@@ -1,7 +1,7 @@
 import type { Building, Colonist, ColonyState, JobType, NodeKind, Pt } from '../domain/types';
 import { findPath } from './pathfinding';
 import { cachedFindPathHier } from './pathHierarchy';
-import { tileAt, passableAt, nearestPassableAdjacent } from './grid';
+import { tileAt, passableAt, neighbors4 } from './grid';
 import { buildIndex, nearest, type SpatialIndex } from './spatialIndex';
 import { CLUSTER, ASSIGN_BUDGET } from '../data/balance';
 
@@ -18,6 +18,19 @@ function nodeCat(kind: NodeKind): string {
   if (kind === 'wood') return 'node:wood';
   if (kind === 'berries') return 'node:berries';
   return 'node:ore'; // stone/clay/iron/gold; fish never designated
+}
+
+/** Ближайший к зданию тайл, откуда до него реально есть путь: сама плитка, если
+ *  проходима, иначе первый проходимый и ДОСТИЖИМЫЙ сосед (не просто первый в фикс.
+ *  порядке — иначе можно выбрать сторону, отрезанную от рабочего, напр. другой берег реки). */
+function reachableBuildTile(s: ColonyState, from: Pt, bx: number, by: number): Pt | null {
+  if (passableAt(s.map, bx, by)) return { x: bx, y: by };
+  for (const n of neighbors4(bx, by, s.map)) {
+    if (!passableAt(s.map, n.x, n.y)) continue;
+    const path = s.nav ? cachedFindPathHier(s.map, s.nav, from, n) : findPath(s.map, from, n);
+    if (path !== null) return n;
+  }
+  return null;
 }
 
 /** Индекс целей текущего тика: designated-узлы по группе + здания по jobType + блюпринты как 'build'. */
@@ -58,13 +71,14 @@ function findTarget(
     });
     if (!t) return null;
     const b = byTile.get(`${t.x},${t.y}`)!;
-    const tile = passableAt(s.map, b.tile.x, b.tile.y) ? b.tile : nearestPassableAdjacent(s.map, b.tile.x, b.tile.y);
-    if (!tile) return null; // непроходимо и нет прохода — пропускаем
+    const tile = reachableBuildTile(s, from, b.tile.x, b.tile.y);
+    if (!tile) return null; // непроходимо и нет достижимого прохода — пропускаем
     return { tile, buildingId: b.id };
   }
   if (job === 'woodcut' || job === 'mine' || job === 'forage') {
     const cat = job === 'woodcut' ? 'node:wood' : job === 'forage' ? 'node:berries' : 'node:ore';
-    const t = nearest(ix, s.map.w, s.map.h, from, cat);
+    // узел должен быть проходим (руда в горах требует сперва туннель — иначе до неё не дойти).
+    const t = nearest(ix, s.map.w, s.map.h, from, cat, (p) => passableAt(s.map, p.x, p.y));
     return t ? { tile: t } : null;
   }
   return null;

@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { createColony } from '@/games/colony/domain/createColony';
 import { runJobScheduler } from '@/games/colony/systems/jobScheduler';
-import { setNode, idx, setBiome, biomeAt, nodeAt } from '@/games/colony/systems/grid';
+import { setNode, idx, setBiome, biomeAt, nodeAt, setPassable } from '@/games/colony/systems/grid';
 import { runWork } from '@/games/colony/systems/work';
 import { tick } from '@/games/colony/systems/tick';
 import { designate } from '@/games/colony/systems/designations';
@@ -54,6 +54,30 @@ describe('mining work', () => {
     const food0 = s.resources.food.amount;
     runWork(s);
     expect(s.resources.food.amount).toBeGreaterThan(food0);
+  });
+});
+
+describe('mine targeting requires passability', () => {
+  it('does not target ore on an impassable mountain tile; becomes targetable once passable', () => {
+    const s = createColony(7);
+    const c0 = s.colonists[0];
+    const tx = Math.round(c0.pos.x) + 1, ty = Math.round(c0.pos.y);
+    setBiome(s.map, tx, ty, 'mountain');
+    setPassable(s.map, tx, ty, false);
+    setNode(s.map, tx, ty, { kind: 'iron', amount: 20, max: 20 });
+    s.designations.add(idx(tx, ty, s.map.w));
+    s.colonists.forEach((c) => {
+      c.task = 'idle';
+      (['farm', 'forage', 'woodcut', 'research', 'build', 'tailor'] as const).forEach((j) => (c.priorities[j] = 0));
+      c.priorities.mine = 3;
+    });
+    runJobScheduler(s);
+    expect(s.colonists.some((c) => c.targetTile?.x === tx && c.targetTile?.y === ty)).toBe(false);
+    // a tunnel (or any means) opens the tile — now it's a valid mine target
+    setPassable(s.map, tx, ty, true);
+    s.colonists.forEach((c) => { c.task = 'idle'; });
+    runJobScheduler(s);
+    expect(s.colonists.some((c) => c.targetTile?.x === tx && c.targetTile?.y === ty)).toBe(true);
   });
 });
 

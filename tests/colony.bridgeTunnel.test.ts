@@ -56,6 +56,29 @@ describe('build target adjacency', () => {
     expect(builder).toBeDefined();
     expect(passableAt(s.map, builder!.targetTile!.x, builder!.targetTile!.y)).toBe(true);
   });
+  it('picks a reachable side, not just the first passable neighbor in fixed order', () => {
+    // Bridge at (bx,by). East neighbor is passable but walled off from the rest of the
+    // map (only exit is the blueprint tile itself, impassable until built) — unreachable.
+    // West neighbor is passable and directly reachable from the colonist.
+    const s = createColony(1);
+    const bx = 70, by = 70;
+    setBiome(s.map, bx, by, 'water'); setPassable(s.map, bx, by, false);
+    setBiome(s.map, bx - 1, by, 'grass'); setPassable(s.map, bx - 1, by, true);
+    setBiome(s.map, bx - 2, by, 'grass'); setPassable(s.map, bx - 2, by, true);
+    setBiome(s.map, bx + 1, by, 'grass'); setPassable(s.map, bx + 1, by, true);
+    setPassable(s.map, bx + 2, by, false);
+    setPassable(s.map, bx + 1, by - 1, false);
+    setPassable(s.map, bx + 1, by + 1, false);
+    s.resources.wood.amount = 100;
+    placeBlueprint(s, 'bridge', bx, by);
+    const c0 = s.colonists[0];
+    c0.pos = { x: bx - 2, y: by };
+    s.colonists.forEach((c) => { c.task = 'idle'; (['farm','forage','woodcut','mine','research','tailor'] as const).forEach((j) => (c.priorities[j] = 0)); c.priorities.build = 3; });
+    runJobScheduler(s);
+    const builder = s.colonists.find((c) => c.task === 'goto_work' && c.targetBuildingId);
+    expect(builder).toBeDefined();
+    expect(builder!.targetTile).toEqual({ x: bx - 1, y: by });
+  });
 });
 
 describe('bridge/tunnel completion', () => {
