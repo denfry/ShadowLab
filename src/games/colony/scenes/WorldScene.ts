@@ -18,6 +18,7 @@ import { Minimap } from './render/Minimap';
 import { DesignationLayer } from './render/DesignationLayer';
 import { FieldLayer } from './render/FieldLayer';
 import { designate, type DesignationMode } from '../systems/designations';
+import { designateField, type FieldTool } from '../systems/fields';
 
 const MIN_ZOOM = 0.4;
 const MAX_ZOOM = 3.0;
@@ -46,6 +47,7 @@ export class WorldScene extends Phaser.Scene {
 
   // Designation tool (chop/mine/forage/cancel) + drag-rectangle state
   private tool: DesignationMode | null = null;
+  private fieldTool: FieldTool | null = null;
   private selecting = false;
   private selStartTile = { x: 0, y: 0 };
   private selRect!: Phaser.GameObjects.Rectangle;
@@ -204,7 +206,7 @@ export class WorldScene extends Phaser.Scene {
       this.ctx.events.emit('game:state', computeHud(this.state));
       return;
     }
-    if (this.tool) {
+    if (this.tool || this.fieldTool) {
       const t = this.worldToTile(p.x, p.y);
       this.selecting = true;
       this.selStartTile = t;
@@ -229,7 +231,7 @@ export class WorldScene extends Phaser.Scene {
       this.ghost.setVisible(true);
       return;
     }
-    if (this.selecting && this.tool) {
+    if (this.selecting && (this.tool || this.fieldTool)) {
       const t = this.worldToTile(p.x, p.y);
       const x0 = Math.min(this.selStartTile.x, t.x), y0 = Math.min(this.selStartTile.y, t.y);
       const x1 = Math.max(this.selStartTile.x, t.x), y1 = Math.max(this.selStartTile.y, t.y);
@@ -252,11 +254,13 @@ export class WorldScene extends Phaser.Scene {
 
   private onPointerUp = (p: Phaser.Input.Pointer) => {
     if (this.minimap?.contains(p.x, p.y)) return;
-    if (this.selecting && this.tool) {
+    if (this.selecting && (this.tool || this.fieldTool)) {
       this.selecting = false;
       this.selRect.setVisible(false);
       const t = this.worldToTile(p.x, p.y);
-      designate(this.state, { x0: this.selStartTile.x, y0: this.selStartTile.y, x1: t.x, y1: t.y }, this.tool);
+      const rect = { x0: this.selStartTile.x, y0: this.selStartTile.y, x1: t.x, y1: t.y };
+      if (this.tool) designate(this.state, rect, this.tool);
+      else if (this.fieldTool) designateField(this.state, rect, this.fieldTool);
       this.ctx.events.emit('game:state', computeHud(this.state));
       return;
     }
@@ -282,7 +286,8 @@ export class WorldScene extends Phaser.Scene {
       case 'speed': s.speed = msg.payload.value; break;
       case 'placeBuilding': this.placingType = msg.payload.building as BuildingType; break;
       case 'cancelPlace': this.placingType = null; this.ghost.setVisible(false); break;
-      case 'setTool': this.tool = (msg.payload?.tool ?? null) as DesignationMode | null; this.placingType = null; this.ghost.setVisible(false); break;
+      case 'setTool': this.tool = (msg.payload?.tool ?? null) as DesignationMode | null; this.fieldTool = null; this.placingType = null; this.ghost.setVisible(false); break;
+      case 'setFieldTool': this.fieldTool = (msg.payload?.tool ?? null) as FieldTool | null; this.tool = null; this.placingType = null; this.ghost.setVisible(false); break;
       case 'setPriority': {
         const c = s.colonists.find((x) => x.id === msg.payload.colonistId);
         if (c) c.priorities[msg.payload.job as keyof typeof c.priorities] = msg.payload.value;
