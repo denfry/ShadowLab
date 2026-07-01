@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { createColony } from '@/games/colony/domain/createColony';
 import { runJobScheduler } from '@/games/colony/systems/jobScheduler';
 import type { Building } from '@/games/colony/domain/types';
-import { setNode, passableAt, neighbors4 } from '@/games/colony/systems/grid';
+import { setNode, passableAt, neighbors4, idx } from '@/games/colony/systems/grid';
 import { pickStartSite } from '@/games/colony/domain/worldgen';
 
 // Find a passable tile near the start site to anchor buildings.
@@ -72,6 +72,7 @@ describe('job scheduler', () => {
     const tx = Math.round(c0.pos.x);
     const ty = Math.round(c0.pos.y);
     setNode(s.map, tx, ty, { kind: 'wood', amount: 30, max: 30 });
+    s.designations.add(idx(tx, ty, s.map.w));
     s.colonists.forEach((c) => {
       c.task = 'idle';
       (['farm', 'research', 'build', 'tailor'] as const).forEach((j) => (c.priorities[j] = 0));

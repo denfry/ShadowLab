@@ -11,6 +11,10 @@ export const START_RESOURCES: Record<ResourceId, Resource_> = {
   food: { amount: 120, capacity: 200 },
   wood: { amount: 60, capacity: 200 },
   science: { amount: 0, capacity: 200 },
+  stone: { amount: 0, capacity: 200 },
+  clay: { amount: 0, capacity: 200 },
+  iron: { amount: 0, capacity: 200 },
+  gold: { amount: 0, capacity: 200 },
 };
 type Resource_ = { amount: number; capacity: number };
 
@@ -34,6 +38,8 @@ export const HEALTH_REGEN_PER_TICK = 0.15;
 // Выработка (на тик во время работы)
 export const FARM_BASE = 0.45;        // *skill *(0.5+fertility)
 export const WOODCUT_BASE = 0.5;      // *skill ; забирает дерево из тайла
+export const MINE_BASE = 0.4;         // *skill ; камень/глина/руда
+export const FORAGE_BASE = 0.5;       // *skill ; ягоды → еда
 export const RESEARCH_BASE = 0.3;     // *skill
 export const BUILD_BASE = 0.6;        // *skill ; прогресс блюпринта
 export const XP_PER_WORK_TICK = 0.6;
@@ -43,19 +49,23 @@ export const STORAGE_CAPACITY_BONUS = 120; // +ёмкость всех ресу�
 export const BUILD_COST: Record<BuildingType, Partial<Record<ResourceId, number>>> = {
   farm: { wood: 20 }, bedroom: { wood: 25 }, storage: { wood: 15 }, lab: { wood: 35 },
   wall: { wood: 5 }, door: { wood: 8 }, heater: { wood: 30 }, tailor: { wood: 25 },
+  bridge: { wood: 8 }, tunnel: { wood: 5, stone: 5 },
 };
 
 export const BUILD_REQUIRED: Record<BuildingType, number> = {
   farm: 30, bedroom: 35, storage: 25, lab: 45, wall: 8, door: 10, heater: 25, tailor: 30,
+  bridge: 15, tunnel: 25,
 };
 
 export const BUILDING_WORK_SLOTS: Record<BuildingType, number> = {
   farm: 3, bedroom: 0, storage: 0, lab: 2, wall: 0, door: 0, heater: 0, tailor: 2,
+  bridge: 0, tunnel: 0,
 };
 
 export const BUILDING_JOB: Record<BuildingType, JobType | undefined> = {
   farm: 'farm', lab: 'research', bedroom: undefined, storage: undefined,
   wall: undefined, door: undefined, heater: undefined, tailor: 'tailor',
+  bridge: undefined, tunnel: undefined,
 };
 
 export const WIN_DAY_STUB = 12;       // заглушка победы (реальный арк — Фаза 4)

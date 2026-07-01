@@ -15,6 +15,10 @@ const RES_META: Record<ResourceId, { label: string; glyph: string; tone: 'good' 
   food: { label: 'Еда', glyph: '🌾', tone: 'good' },
   wood: { label: 'Дерево', glyph: '🪵', tone: 'warn' },
   science: { label: 'Наука', glyph: '🔬', tone: 'accent' },
+  stone: { label: 'Камень', glyph: '🪨', tone: 'warn' },
+  clay: { label: 'Глина', glyph: '🧱', tone: 'warn' },
+  iron: { label: 'Железо', glyph: '⛓️', tone: 'accent' },
+  gold: { label: 'Золото', glyph: '🪙', tone: 'accent' },
 };
 
 const SEASON_LABEL: Record<string, string> = {
@@ -29,6 +33,7 @@ export function ColonyHud({ ctx }: { ctx: GameContext }) {
   const [rosterOpen, setRosterOpen] = useState(false);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [tempOn, setTempOn] = useState(false);
+  const [tool, setTool] = useState<'chop' | 'mine' | 'forage' | 'cancel' | null>(null);
 
   useEffect(() => {
     const offState = ctx.events.on('game:state', (s: ColonyHudState) => setHud(s));
@@ -40,6 +45,12 @@ export function ColonyHud({ ctx }: { ctx: GameContext }) {
 
   const cmd = (type: string, payload?: unknown) => ctx.events.emit('ui:command', { type, payload });
   const selected = hud.colonists.find((c) => c.id === selectedId) ?? null;
+
+  const pickTool = (t: 'chop' | 'mine' | 'forage' | 'cancel') => {
+    const next = tool === t ? null : t;
+    setTool(next);
+    cmd('setTool', { tool: next });
+  };
 
   return (
     <>
@@ -72,6 +83,30 @@ export function ColonyHud({ ctx }: { ctx: GameContext }) {
       {/* Правая панель */}
       <div className="absolute bottom-4 right-4 top-32 z-10 hidden w-72 md:block">
         <div className="panel flex h-full flex-col gap-4 overflow-y-auto p-4">
+          <div>
+            <p className="label-mono mb-2">Зоны добычи</p>
+            <div className="grid grid-cols-2 gap-2">
+              {([
+                { id: 'chop', label: '🌲 Рубка' },
+                { id: 'mine', label: '⛏️ Добыча' },
+                { id: 'forage', label: '🫐 Сбор' },
+                { id: 'cancel', label: '✕ Отмена' },
+              ] as const).map((t) => (
+                <button
+                  key={t.id}
+                  onClick={() => pickTool(t.id)}
+                  className={cx(
+                    'rounded-xl border p-2 text-center font-display text-[0.7rem] transition-all',
+                    tool === t.id ? 'border-accent/60 bg-accent/20 text-accent' : 'border-edge/60 text-ink hover:border-accent/50',
+                  )}
+                >
+                  {t.label}
+                </button>
+              ))}
+            </div>
+            <p className="mt-1 font-mono text-[0.55rem] text-muted">выбери режим, затем протяни прямоугольник по карте</p>
+          </div>
+
           <div>
             <p className="label-mono mb-2">Строительство</p>
             <BuildMenu onPick={(b: BuildingType) => cmd('placeBuilding', { building: b })} />

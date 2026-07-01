@@ -24,6 +24,7 @@ export interface ColonySave {
   stock: { clothing: number };
   env: ColonyState['env'];
   assignCursor: number;
+  designations: number[];
   log: LogEntry[];
   flags: { gameOver: boolean; victory: boolean };
   overrides: TileOverride[];
@@ -67,6 +68,7 @@ export function toSave(s: ColonyState): ColonySave {
     stock: s.stock,
     env: s.env,
     assignCursor: s.assignCursor,
+    designations: [...s.designations],
     log: s.log,
     flags: s.flags,
     overrides: diffOverrides(s),
@@ -86,6 +88,7 @@ export function fromSave(p: ColonySave): ColonyState {
     if (!b.built) continue;
     setBuildingId(map, b.tile.x, b.tile.y, b.id);
     if (b.type === 'wall') setPassable(map, b.tile.x, b.tile.y, false);
+    if (b.type === 'bridge' || b.type === 'tunnel') setPassable(map, b.tile.x, b.tile.y, true);
   }
   const nav = buildNav(map, CLUSTER);
   return {
@@ -107,6 +110,7 @@ export function fromSave(p: ColonySave): ColonyState {
     map,
     nav,
     assignCursor: p.assignCursor ?? 0,
+    designations: new Set<number>(p.designations ?? []),
     log: p.log,
     flags: p.flags,
   };

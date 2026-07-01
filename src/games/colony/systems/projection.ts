@@ -3,7 +3,7 @@ import { topSkill } from '../domain/skills';
 
 export function computeHud(s: ColonyState): ColonyHudState {
   const alive = s.colonists.filter((c) => c.alive);
-  const buildingCounts: Record<BuildingType, number> = { farm: 0, bedroom: 0, storage: 0, lab: 0, wall: 0, door: 0, heater: 0, tailor: 0 };
+  const buildingCounts: Record<BuildingType, number> = { farm: 0, bedroom: 0, storage: 0, lab: 0, wall: 0, door: 0, heater: 0, tailor: 0, bridge: 0, tunnel: 0 };
   for (const b of s.buildings) if (b.built) buildingCounts[b.type] += 1;
 
   return {
@@ -17,6 +17,10 @@ export function computeHud(s: ColonyState): ColonyHudState {
       food: { ...s.resources.food },
       wood: { ...s.resources.wood },
       science: { ...s.resources.science },
+      stone: { ...s.resources.stone },
+      clay: { ...s.resources.clay },
+      iron: { ...s.resources.iron },
+      gold: { ...s.resources.gold },
     },
     colonists: alive.map((c) => ({
       id: c.id,

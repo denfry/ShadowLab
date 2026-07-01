@@ -8,7 +8,7 @@ import { regenerateWorld, pickStartSite } from './worldgen';
 import { passableAt } from '../systems/grid';
 import { buildNav } from '../systems/pathHierarchy';
 
-const JOB_TYPES: JobType[] = ['farm', 'woodcut', 'research', 'build', 'tailor'];
+const JOB_TYPES: JobType[] = ['farm', 'woodcut', 'mine', 'forage', 'research', 'build', 'tailor'];
 
 function startingPriorities(): Record<JobType, number> {
   const p = {} as Record<JobType, number>;
@@ -62,7 +62,7 @@ export function createColony(seed: number): ColonyState {
   });
 
   return {
-    version: 6,
+    version: 7,
     seed,
     rngState: rng.seed,
     tick: 0,
@@ -73,6 +73,10 @@ export function createColony(seed: number): ColonyState {
       food: { ...START_RESOURCES.food },
       wood: { ...START_RESOURCES.wood },
       science: { ...START_RESOURCES.science },
+      stone: { ...START_RESOURCES.stone },
+      clay: { ...START_RESOURCES.clay },
+      iron: { ...START_RESOURCES.iron },
+      gold: { ...START_RESOURCES.gold },
     },
     colonists,
     buildings: [],
@@ -84,6 +88,7 @@ export function createColony(seed: number): ColonyState {
     map,
     nav,
     assignCursor: 0,
+    designations: new Set<number>(),
     log: [{ day: 1, text: 'Колония основана. Удачи.', tone: 'neutral' }],
     flags: { gameOver: false, victory: false },
   };

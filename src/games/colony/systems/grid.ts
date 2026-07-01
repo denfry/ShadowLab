@@ -128,6 +128,15 @@ export function neighbors4(x: number, y: number, m: ColonyMap): Pt[] {
   return out;
 }
 
+/** Ближайший 4-сосед с passable=1 (для целей постройки на непроходимом тайле). */
+export function nearestPassableAdjacent(m: ColonyMap, x: number, y: number): Pt | undefined {
+  for (const d of DIRS) {
+    const nx = x + d.x, ny = y + d.y;
+    if (inBounds(nx, ny, m) && m.passable[idx(nx, ny, m.w)] === 1) return { x: nx, y: ny };
+  }
+  return undefined;
+}
+
 export function forEachTile(m: ColonyMap, fn: (i: number, x: number, y: number) => void): void {
   const { w, h } = m;
   for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) fn(y * w + x, x, y);

@@ -1,7 +1,7 @@
-import type { Building, Colonist, ColonyState, JobType, Pt } from '../domain/types';
+import type { Building, Colonist, ColonyState, JobType, NodeKind, Pt } from '../domain/types';
 import { findPath } from './pathfinding';
 import { cachedFindPathHier } from './pathHierarchy';
-import { tileAt } from './grid';
+import { tileAt, passableAt, neighbors4 } from './grid';
 import { buildIndex, nearest, type SpatialIndex } from './spatialIndex';
 import { CLUSTER, ASSIGN_BUDGET } from '../data/balance';
 
@@ -14,7 +14,26 @@ function workersOn(s: ColonyState, buildingId: string): number {
   ).length;
 }
 
-/** Индекс целей текущего тика: узлы по виду + здания по jobType + блюпринты как 'build'. */
+function nodeCat(kind: NodeKind): string {
+  if (kind === 'wood') return 'node:wood';
+  if (kind === 'berries') return 'node:berries';
+  return 'node:ore'; // stone/clay/iron/gold; fish never designated
+}
+
+/** Ближайший к зданию тайл, откуда до него реально есть путь: сама плитка, если
+ *  проходима, иначе первый проходимый и ДОСТИЖИМЫЙ сосед (не просто первый в фикс.
+ *  порядке — иначе можно выбрать сторону, отрезанную от рабочего, напр. другой берег реки). */
+function reachableBuildTile(s: ColonyState, from: Pt, bx: number, by: number): Pt | null {
+  if (passableAt(s.map, bx, by)) return { x: bx, y: by };
+  for (const n of neighbors4(bx, by, s.map)) {
+    if (!passableAt(s.map, n.x, n.y)) continue;
+    const path = s.nav ? cachedFindPathHier(s.map, s.nav, from, n) : findPath(s.map, from, n);
+    if (path !== null) return n;
+  }
+  return null;
+}
+
+/** Индекс целей текущего тика: designated-узлы по группе + здания по jobType + блюпринты как 'build'. */
 function buildTargetIndex(s: ColonyState): { ix: SpatialIndex; byTile: Map<string, Building> } {
   const pts: Array<{ x: number; y: number; cat: string }> = [];
   const byTile = new Map<string, Building>();
@@ -26,7 +45,8 @@ function buildTargetIndex(s: ColonyState): { ix: SpatialIndex; byTile: Map<strin
   }
   for (const [i, node] of s.map.nodes) {
     if (node.amount <= 0) continue;
-    pts.push({ x: i % s.map.w, y: Math.floor(i / s.map.w), cat: `node:${node.kind}` });
+    if (!s.designations.has(i)) continue; // only designated nodes are work targets
+    pts.push({ x: i % s.map.w, y: Math.floor(i / s.map.w), cat: nodeCat(node.kind) });
   }
   return { ix: buildIndex(s.map.w, s.map.h, CLUSTER, pts), byTile };
 }
@@ -51,16 +71,20 @@ function findTarget(
     });
     if (!t) return null;
     const b = byTile.get(`${t.x},${t.y}`)!;
-    return { tile: b.tile, buildingId: b.id };
+    const tile = reachableBuildTile(s, from, b.tile.x, b.tile.y);
+    if (!tile) return null; // непроходимо и нет достижимого прохода — пропускаем
+    return { tile, buildingId: b.id };
   }
-  if (job === 'woodcut') {
-    const t = nearest(ix, s.map.w, s.map.h, from, 'node:wood');
+  if (job === 'woodcut' || job === 'mine' || job === 'forage') {
+    const cat = job === 'woodcut' ? 'node:wood' : job === 'forage' ? 'node:berries' : 'node:ore';
+    // узел должен быть проходим (руда в горах требует сперва туннель — иначе до неё не дойти).
+    const t = nearest(ix, s.map.w, s.map.h, from, cat, (p) => passableAt(s.map, p.x, p.y));
     return t ? { tile: t } : null;
   }
   return null;
 }
 
-const JOB_ORDER: JobType[] = ['build', 'farm', 'woodcut', 'research', 'tailor'];
+const JOB_ORDER: JobType[] = ['build', 'farm', 'forage', 'woodcut', 'mine', 'research', 'tailor'];
 
 /** Назначает работу idle-колонистам с бюджетом путей за тик (time-sliced). Без RNG. */
 export function runJobScheduler(s: ColonyState): void {

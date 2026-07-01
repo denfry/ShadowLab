@@ -4,7 +4,7 @@ import { BUILDABLE, BUILDING_LABEL } from '../../data/buildings';
 
 const GLYPH: Record<BuildingType, string> = {
   farm: '🌾', bedroom: '🛏️', storage: '📦', lab: '🔬',
-  wall: '🧱', door: '🚪', heater: '🔥', tailor: '🪡',
+  wall: '🧱', door: '🚪', heater: '🔥', tailor: '🪡', bridge: '🌉', tunnel: '⛏️',
 };
 
 export function BuildMenu({ onPick }: { onPick: (b: BuildingType) => void }) {
@@ -18,7 +18,9 @@ export function BuildMenu({ onPick }: { onPick: (b: BuildingType) => void }) {
         >
           <span className="block text-lg">{GLYPH[b]}</span>
           <span className="block font-display text-[0.7rem] text-ink">{BUILDING_LABEL[b]}</span>
-          <span className="block font-mono text-[0.6rem] text-muted">{BUILD_COST[b].wood ?? 0}🪵</span>
+          <span className="block font-mono text-[0.6rem] text-muted">
+            {BUILD_COST[b].wood ? `${BUILD_COST[b].wood}🪵 ` : ''}{BUILD_COST[b].stone ? `${BUILD_COST[b].stone}🪨` : ''}
+          </span>
         </button>
       ))}
     </div>

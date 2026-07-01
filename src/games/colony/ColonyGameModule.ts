@@ -9,7 +9,7 @@ import { fromSave, type ColonySave } from './domain/save';
 import { WorldScene } from './scenes/WorldScene';
 import { ColonyHud } from './ui/ColonyHud';
 
-const COLONY_PAYLOAD_VERSION = 6;
+const COLONY_PAYLOAD_VERSION = 7;
 
 export const colonyModule: GameModule = {
   definition: COLONY_DEFINITION,
