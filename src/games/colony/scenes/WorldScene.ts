@@ -16,6 +16,7 @@ import { WaterLayer } from './render/WaterLayer';
 import { SpriteLayer } from './render/SpriteLayer';
 import { Minimap } from './render/Minimap';
 import { DesignationLayer } from './render/DesignationLayer';
+import { FieldLayer } from './render/FieldLayer';
 import { designate, type DesignationMode } from '../systems/designations';
 
 const MIN_ZOOM = 0.4;
@@ -41,6 +42,7 @@ export class WorldScene extends Phaser.Scene {
   private sprites!: SpriteLayer;
   private minimap!: Minimap;
   private designations!: DesignationLayer;
+  private fieldLayer!: FieldLayer;
 
   // Designation tool (chop/mine/forage/cancel) + drag-rectangle state
   private tool: DesignationMode | null = null;
@@ -127,6 +129,7 @@ export class WorldScene extends Phaser.Scene {
     this.sprites = new SpriteLayer(this, this.state);
     this.minimap = new Minimap(this, this.state, (tx, ty) => this.centerOnTile(tx, ty));
     this.designations = new DesignationLayer(this, this.state);
+    this.fieldLayer = new FieldLayer(this, this.state);
 
     // Temp overlay layer — above water (-900), below Y-sorted sprites (0..~5600).
     this.tempLayer = this.add.graphics().setDepth(-500);
@@ -292,6 +295,7 @@ export class WorldScene extends Phaser.Scene {
         this.sprites?.destroy();
         this.minimap?.destroy();
         this.designations?.destroy();
+        this.fieldLayer?.destroy();
         this.scene.restart({ state: createColony(randomSeed()), ctx: this.ctx });
         return;
     }
@@ -334,6 +338,7 @@ export class WorldScene extends Phaser.Scene {
     this.water.update(this.time.now);
     this.sprites.update();
     this.designations.update();
+    this.fieldLayer.update();
     this.minimap.update();
     if (this.tempOverlay) this.drawTempOverlay(); else this.tempLayer.clear();
 
@@ -378,5 +383,6 @@ export class WorldScene extends Phaser.Scene {
     this.sprites?.destroy();
     this.minimap?.destroy();
     this.designations?.destroy();
+    this.fieldLayer?.destroy();
   }
 }
