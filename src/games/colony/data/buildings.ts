@@ -1,10 +1,10 @@
 import type { BuildingType } from '../domain/types';
 import { BUILDING_JOB, BUILDING_WORK_SLOTS } from './balance';
 
-export const BUILDABLE: BuildingType[] = ['farm', 'bedroom', 'storage', 'lab', 'wall', 'door', 'heater', 'tailor', 'bridge', 'tunnel'];
+export const BUILDABLE: BuildingType[] = ['bedroom', 'storage', 'lab', 'wall', 'door', 'heater', 'tailor', 'bridge', 'tunnel'];
 
 export const BUILDING_LABEL: Record<BuildingType, string> = {
-  farm: 'Ферма', bedroom: 'Спальня', storage: 'Склад', lab: 'Лаборатория',
+  bedroom: 'Спальня', storage: 'Склад', lab: 'Лаборатория',
   wall: 'Стена', door: 'Дверь', heater: 'Обогреватель', tailor: 'Верстак',
   bridge: 'Мост', tunnel: 'Туннель',
 };

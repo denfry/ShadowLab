@@ -62,14 +62,7 @@ function findTarget(
 ): { tile: Pt; buildingId?: string } | null {
   if (job === 'farm') {
     const t = nearest(ix, s.map.w, s.map.h, from, 'field:work');
-    if (t) return { tile: t };
-    const bt = nearest(ix, s.map.w, s.map.h, from, 'job:farm', (p) => {
-      const b = byTile.get(`${p.x},${p.y}`)!;
-      return workersOn(s, b.id) < b.workSlots;
-    });
-    if (!bt) return null;
-    const b = byTile.get(`${bt.x},${bt.y}`)!;
-    return { tile: b.tile, buildingId: b.id };
+    return t ? { tile: t } : null;
   }
   if (job === 'research' || job === 'tailor') {
     const t = nearest(ix, s.map.w, s.map.h, from, `job:${job}`, (p) => {

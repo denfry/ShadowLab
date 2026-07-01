@@ -3,7 +3,7 @@ import type { Building, Colonist, ColonyState, CropId, NodeKind, ResourceId, Ski
 import { grantXp, skillMultiplier } from '../domain/skills';
 import { TRAITS } from '../domain/traits';
 import {
-  BUILD_BASE, CLOTHING_REQUIRED, CLOTHING_WOOD_COST, FARM_BASE, FARM_FREEZE_TEMP,
+  BUILD_BASE, CLOTHING_REQUIRED, CLOTHING_WOOD_COST, FARM_FREEZE_TEMP,
   MINE_BASE, FORAGE_BASE, RESEARCH_BASE, STORAGE_CAPACITY_BONUS, TAILOR_BASE,
   WOODCUT_BASE, XP_PER_WORK_TICK,
   TILL_BASE, PLANT_BASE, HARVEST_BASE, TILL_REQUIRED, PLANT_REQUIRED, HARVEST_REQUIRED,
@@ -75,14 +75,7 @@ export function runWork(s: ColonyState): void {
 
     // Производство в здании.
     if (building && building.built) {
-      if (building.jobType === 'farm') {
-        if (tempAt(s.map, building.tile.x, building.tile.y) <= FARM_FREEZE_TEMP) { /* мёрзлая земля — ничего */ }
-        else {
-          const fert = 0.5 + fertilityAt(s.map, building.tile.x, building.tile.y);
-          addResource(s, 'food', FARM_BASE * skillMultiplier(c.skills.farming.level) * workSpeed(c) * fert * cf);
-          grantXp(c.skills.farming, XP_PER_WORK_TICK);
-        }
-      } else if (building.jobType === 'research') {
+      if (building.jobType === 'research') {
         addResource(s, 'science', RESEARCH_BASE * skillMultiplier(c.skills.research.level) * workSpeed(c) * cf);
         grantXp(c.skills.research, XP_PER_WORK_TICK);
       } else if (building.jobType === 'tailor') {

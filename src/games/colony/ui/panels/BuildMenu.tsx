@@ -3,7 +3,7 @@ import { BUILD_COST } from '../../data/balance';
 import { BUILDABLE, BUILDING_LABEL } from '../../data/buildings';
 
 const GLYPH: Record<BuildingType, string> = {
-  farm: '🌾', bedroom: '🛏️', storage: '📦', lab: '🔬',
+  bedroom: '🛏️', storage: '📦', lab: '🔬',
   wall: '🧱', door: '🚪', heater: '🔥', tailor: '🪡', bridge: '🌉', tunnel: '⛏️',
 };
 

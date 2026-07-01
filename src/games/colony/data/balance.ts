@@ -48,23 +48,23 @@ export const XP_PER_WORK_TICK = 0.6;
 export const STORAGE_CAPACITY_BONUS = 120; // +ёмкость всех ресурсов за склад
 
 export const BUILD_COST: Record<BuildingType, Partial<Record<ResourceId, number>>> = {
-  farm: { wood: 20 }, bedroom: { wood: 25 }, storage: { wood: 15 }, lab: { wood: 35 },
+  bedroom: { wood: 25 }, storage: { wood: 15 }, lab: { wood: 35 },
   wall: { wood: 5 }, door: { wood: 8 }, heater: { wood: 30 }, tailor: { wood: 25 },
   bridge: { wood: 8 }, tunnel: { wood: 5, stone: 5 },
 };
 
 export const BUILD_REQUIRED: Record<BuildingType, number> = {
-  farm: 30, bedroom: 35, storage: 25, lab: 45, wall: 8, door: 10, heater: 25, tailor: 30,
+  bedroom: 35, storage: 25, lab: 45, wall: 8, door: 10, heater: 25, tailor: 30,
   bridge: 15, tunnel: 25,
 };
 
 export const BUILDING_WORK_SLOTS: Record<BuildingType, number> = {
-  farm: 3, bedroom: 0, storage: 0, lab: 2, wall: 0, door: 0, heater: 0, tailor: 2,
+  bedroom: 0, storage: 0, lab: 2, wall: 0, door: 0, heater: 0, tailor: 2,
   bridge: 0, tunnel: 0,
 };
 
 export const BUILDING_JOB: Record<BuildingType, JobType | undefined> = {
-  farm: 'farm', lab: 'research', bedroom: undefined, storage: undefined,
+  lab: 'research', bedroom: undefined, storage: undefined,
   wall: undefined, door: undefined, heater: undefined, tailor: 'tailor',
   bridge: undefined, tunnel: undefined,
 };

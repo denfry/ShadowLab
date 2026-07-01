@@ -10,7 +10,7 @@ export type TraitId = 'hardworker' | 'frail' | 'lazy' | 'optimist' | 'bloodlust'
 export type CropId = 'wheat' | 'potato' | 'legume' | 'flax';
 export type FieldStage = 'till' | 'plant' | 'grow' | 'ready';
 export interface FieldPlot { crop: CropId; stage: FieldStage; progress: number; }
-export type BuildingType = 'farm' | 'bedroom' | 'storage' | 'lab' | 'wall' | 'door' | 'heater' | 'tailor' | 'bridge' | 'tunnel';
+export type BuildingType = 'bedroom' | 'storage' | 'lab' | 'wall' | 'door' | 'heater' | 'tailor' | 'bridge' | 'tunnel';
 /** Назначаемые игроком категории работ (приоритеты 0..3). */
 export type JobType = 'farm' | 'woodcut' | 'mine' | 'forage' | 'research' | 'build' | 'tailor';
 /** Конечный автомат поведения колониста. */
