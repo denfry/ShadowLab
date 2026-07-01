@@ -39,7 +39,7 @@ function finishWork(c: Colonist): void {
 function applyStorageCapacity(s: ColonyState): void {
   const built = s.buildings.filter((b) => b.type === 'storage' && b.built).length;
   const cap = 200 + built * STORAGE_CAPACITY_BONUS;
-  for (const id of ['food', 'wood', 'science', 'stone', 'clay', 'iron', 'gold'] as const) s.resources[id].capacity = cap;
+  for (const id of ['food', 'wood', 'science', 'stone', 'clay', 'iron', 'gold', 'fiber'] as const) s.resources[id].capacity = cap;
 }
 
 /** Применяет работу для всех колонистов в задаче 'work'. Без RNG. */

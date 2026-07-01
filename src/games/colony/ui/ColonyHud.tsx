@@ -19,6 +19,7 @@ const RES_META: Record<ResourceId, { label: string; glyph: string; tone: 'good' 
   clay: { label: 'Глина', glyph: '🧱', tone: 'warn' },
   iron: { label: 'Железо', glyph: '⛓️', tone: 'accent' },
   gold: { label: 'Золото', glyph: '🪙', tone: 'accent' },
+  fiber: { label: 'Волокно', glyph: '🧵', tone: 'warn' },
 };
 
 const SEASON_LABEL: Record<string, string> = {

@@ -111,6 +111,8 @@ export function fromSave(p: ColonySave): ColonyState {
     nav,
     assignCursor: p.assignCursor ?? 0,
     designations: new Set<number>(p.designations ?? []),
+    fields: new Map(),          // real persistence lands in Task 7
+    regrowCooldowns: new Map(), // real persistence lands in Task 7
     log: p.log,
     flags: p.flags,
   };

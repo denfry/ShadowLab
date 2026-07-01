@@ -15,6 +15,7 @@ export const START_RESOURCES: Record<ResourceId, Resource_> = {
   clay: { amount: 0, capacity: 200 },
   iron: { amount: 0, capacity: 200 },
   gold: { amount: 0, capacity: 200 },
+  fiber: { amount: 0, capacity: 200 },
 };
 type Resource_ = { amount: number; capacity: number };
 

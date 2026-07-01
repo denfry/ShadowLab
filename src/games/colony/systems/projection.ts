@@ -21,6 +21,7 @@ export function computeHud(s: ColonyState): ColonyHudState {
       clay: { ...s.resources.clay },
       iron: { ...s.resources.iron },
       gold: { ...s.resources.gold },
+      fiber: { ...s.resources.fiber },
     },
     colonists: alive.map((c) => ({
       id: c.id,

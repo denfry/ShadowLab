@@ -77,6 +77,7 @@ export function createColony(seed: number): ColonyState {
       clay: { ...START_RESOURCES.clay },
       iron: { ...START_RESOURCES.iron },
       gold: { ...START_RESOURCES.gold },
+      fiber: { ...START_RESOURCES.fiber },
     },
     colonists,
     buildings: [],
@@ -89,6 +90,8 @@ export function createColony(seed: number): ColonyState {
     nav,
     assignCursor: 0,
     designations: new Set<number>(),
+    fields: new Map(),
+    regrowCooldowns: new Map(),
     log: [{ day: 1, text: 'Колония основана. Удачи.', tone: 'neutral' }],
     flags: { gameOver: false, victory: false },
   };
