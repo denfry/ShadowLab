@@ -105,6 +105,9 @@ export const setNode = (m: ColonyMap, x: number, y: number, n?: ResourceNode): v
   const i = idx(x, y, m.w);
   if (n === undefined) m.nodes.delete(i); else m.nodes.set(i, n);
 };
+export const setFertility = (m: ColonyMap, x: number, y: number, v: number): void => {
+  if (inBounds(x, y, m)) m.fertility[idx(x, y, m.w)] = Math.min(1, Math.max(0, v));
+};
 
 /** Уменьшает узел на `amt` (не больше остатка); очищает узел при <=0. Возвращает взятое. */
 export function depleteNode(m: ColonyMap, x: number, y: number, amt: number): number {
