@@ -5,6 +5,8 @@ import { setBiome, setPassable, idx } from '@/games/colony/systems/grid';
 import { runWork, advanceGrowth, killUnripeCrops } from '@/games/colony/systems/work';
 import { fertilityAt, setFertility } from '@/games/colony/systems/grid';
 import { TILL_REQUIRED, PLANT_REQUIRED, HARVEST_REQUIRED, CROP_GROWTH_TICKS } from '@/games/colony/data/balance';
+import { tick } from '@/games/colony/systems/tick';
+import { designateField } from '@/games/colony/systems/fields';
 
 describe('field scheduler targeting', () => {
   it('targets a till-stage field tile; ignores grow-stage tiles', () => {
@@ -126,4 +128,24 @@ describe('field labor cycle', () => {
     expect(plot.progress).toBe(0);
     expect(fertilityAt(s.map, tx, ty)).toBeCloseTo(0.4, 5);
   });
+});
+
+describe('field determinism', () => {
+  it('a run with all 4 crops designated + active regrowth is deterministic and exception-free', () => {
+    const build = (seed: number) => {
+      const s = createColony(seed);
+      const crops = ['wheat', 'potato', 'legume', 'flax'] as const;
+      for (const crop of crops) {
+        designateField(s, { x0: 0, y0: 0, x1: s.map.w - 1, y1: s.map.h - 1 }, crop);
+      }
+      s.colonists.forEach((c) => { c.priorities.farm = 3; });
+      return s;
+    };
+    const a = build(3030), b = build(3030);
+    for (let i = 0; i < 300; i++) { tick(a); tick(b); }
+    expect(a.resources.food.amount).toBe(b.resources.food.amount);
+    expect(a.resources.fiber.amount).toBe(b.resources.fiber.amount);
+    expect(a.colonists.map((c) => `${c.pos.x.toFixed(3)},${c.pos.y.toFixed(3)}`))
+      .toEqual(b.colonists.map((c) => `${c.pos.x.toFixed(3)},${c.pos.y.toFixed(3)}`));
+  }, 30000);
 });

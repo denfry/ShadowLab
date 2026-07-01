@@ -1,23 +1,20 @@
 import { describe, expect, it } from 'vitest';
 import { createColony } from '@/games/colony/domain/createColony';
 import { placeBlueprint } from '@/games/colony/systems/build';
+import { designateField } from '@/games/colony/systems/fields';
 import { tick, alive } from '@/games/colony/systems/tick';
 import { TICKS_PER_DAY } from '@/games/colony/data/balance';
 import { pickStartSite } from '@/games/colony/domain/worldgen';
-import { passableAt } from '@/games/colony/systems/grid';
+import { passableAt, setBiome, setPassable } from '@/games/colony/systems/grid';
 
 /**
- * Headless "playtest": exercises the full Phase 0 loop end-to-end —
- * place farms + storage, builders construct them, farmers feed the colony —
- * and asserts the colony is actually survivable (no path deadlock, no instant
- * starvation spiral) over a full run. Catches gameplay/balance regressions that
- * the per-system unit tests do not.
- *
- * Buildings are placed near pickStartSite (always passable grass/meadow) rather
- * than at MAP_W/2, MAP_H/2, which may be water or mountain on a 256² world.
+ * Headless "playtest": exercises the full field-farming loop end-to-end —
+ * designate wheat fields, colonists till/plant/harvest them — and asserts the
+ * colony is actually survivable (no path deadlock, no instant starvation
+ * spiral) over a full run. Catches gameplay/balance regressions that the
+ * per-system unit tests do not.
  */
 
-/** Find up to `n` distinct passable offsets adjacent to `start`, searching outward. */
 function nearbySlots(s: ReturnType<typeof createColony>, n: number): Array<{ x: number; y: number }> {
   const start = pickStartSite(s.map);
   const slots: Array<{ x: number; y: number }> = [];
@@ -33,35 +30,36 @@ function nearbySlots(s: ReturnType<typeof createColony>, n: number): Array<{ x: 
   return slots;
 }
 
+/** Clears a 5x5 patch of grass around `t` and designates it as a wheat field. */
+function sowWheatField(s: ReturnType<typeof createColony>, t: { x: number; y: number }): void {
+  for (let dy = -2; dy <= 2; dy++) {
+    for (let dx = -2; dx <= 2; dx++) {
+      setBiome(s.map, t.x + dx, t.y + dy, 'grass');
+      setPassable(s.map, t.x + dx, t.y + dy, true);
+    }
+  }
+  designateField(s, { x0: t.x - 2, y0: t.y - 2, x1: t.x + 2, y1: t.y + 2 }, 'wheat');
+}
+
 describe('colony Phase 0 playtest', () => {
-  it('a colony given farms survives the run and produces food', () => {
+  it('a colony given fields survives the run and produces food', () => {
     const s = createColony(2024);
     const [t1, t2, t3] = nearbySlots(s, 3);
-
-    expect(placeBlueprint(s, 'farm', t1.x, t1.y).ok).toBe(true);
-    expect(placeBlueprint(s, 'farm', t2.x, t2.y).ok).toBe(true);
+    sowWheatField(s, t1);
+    sowWheatField(s, t2);
     expect(placeBlueprint(s, 'storage', t3.x, t3.y).ok).toBe(true);
 
     s.colonists.forEach((c) => { c.priorities.build = 3; c.priorities.farm = 3; });
 
-    // Run until the win-stub day (12) or game over.
     for (let i = 0; i < TICKS_PER_DAY * 11 && !s.flags.gameOver; i++) tick(s);
 
-    // The colony must not have died out.
     expect(alive(s).length).toBeGreaterThan(0);
-    // Builders must have completed at least one farm.
-    expect(s.buildings.filter((b) => b.type === 'farm' && b.built).length).toBeGreaterThan(0);
-    // Colonists must have gained some farming/building experience (work actually happened).
-    const totalXp = s.colonists.reduce(
-      (sum, c) => sum + c.skills.farming.level + c.skills.building.level,
-      0,
-    );
+    const totalXp = s.colonists.reduce((sum, c) => sum + c.skills.farming.level, 0);
     expect(totalXp).toBeGreaterThan(0);
   }, 60000);
 
-  it('without any farms the colony eventually starves (negative control)', () => {
+  it('without any fields the colony eventually starves (negative control)', () => {
     const s = createColony(2024);
-    // No farms placed; disable farm/research so nobody can produce food.
     s.colonists.forEach((c) => {
       c.priorities.farm = 0;
       c.priorities.research = 0;
@@ -71,13 +69,11 @@ describe('colony Phase 0 playtest', () => {
     expect(s.flags.victory).toBe(false);
   }, 60000);
 
-  it('survives into winter with a heated room and clothing buffer', () => {
+  it('survives into the next season with a heated room and clothing buffer', () => {
     const s = createColony(777);
     const [t1, t2] = nearbySlots(s, 2);
-    // фермы для еды
-    placeBlueprint(s, 'farm', t1.x, t1.y);
-    placeBlueprint(s, 'farm', t2.x, t2.y);
-    // запас одежды и дерева, чтобы пережить холод
+    sowWheatField(s, t1);
+    sowWheatField(s, t2);
     s.stock.clothing = 5;
     s.resources.wood.amount = 200;
     s.colonists.forEach((c) => { c.priorities.build = 3; c.priorities.farm = 3; });
