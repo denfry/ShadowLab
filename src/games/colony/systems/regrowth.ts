@@ -8,7 +8,7 @@ import { idx, nodeAt, setNode, biomeAt, buildingIdAt, neighbors4 } from './grid'
  *  Единственный источник случайности — переданный seeded Rng; порядок обхода
  *  Map/соседей фиксирован (детерминизм). */
 export function runRegrowth(s: ColonyState, rng: Rng): void {
-  for (const [i, node] of s.map.nodes) {
+  for (const [i, node] of [...s.map.nodes]) {
     if (node.kind !== 'wood' || node.amount <= 0) continue;
     if (!rng.chance(REGROW_CHANCE_WOOD)) continue;
     const x = i % s.map.w, y = Math.floor(i / s.map.w);
