@@ -1,4 +1,4 @@
-import type { Biome, BuildingType, JobType, ResourceId } from '../domain/types';
+import type { Biome, BuildingType, CropId, JobType, ResourceId } from '../domain/types';
 
 export const MAP_W = 256;
 export const MAP_H = 256;
@@ -153,3 +153,22 @@ export const LOD_FAR_ZOOM = 0.55;   // zoom < этого -> дальний LOD (
 export const MINIMAP_PX = 192;      // сторона миникарты в экранных пикселях
 export const WATER_ANIM_SPEED = 0.012; // скорость прокрутки воды (px/мс при базовом масштабе)
 export const TEX_DETAIL = 0.18;     // амплитуда шумовой детали биом-текстур (0..1)
+
+// ---- Столп 1B: фермерство вглубь ----
+export const TILL_BASE = 0.5;     // *skill(farming) ; вспашка тайла
+export const PLANT_BASE = 0.5;    // *skill(farming) ; посадка культуры
+export const HARVEST_BASE = 0.5;  // *skill(farming) ; сбор урожая
+export const TILL_REQUIRED = 5;
+export const PLANT_REQUIRED = 4;
+export const HARVEST_REQUIRED = 3;
+
+export const CROP_GROWTH_TICKS: Record<CropId, number> = {
+  wheat: 3 * TICKS_PER_DAY, potato: 4 * TICKS_PER_DAY, legume: 3 * TICKS_PER_DAY, flax: 4 * TICKS_PER_DAY,
+};
+export const CROP_YIELD: Record<CropId, number> = { wheat: 12, potato: 18, legume: 8, flax: 6 };
+export const CROP_FERTILITY_DELTA: Record<CropId, number> = { wheat: -0.06, potato: -0.05, legume: 0.08, flax: -0.02 };
+
+export const REGROW_CHANCE_WOOD = 0.02; // в день, на живой wood-узел
+export const WOOD_SAPLING_AMOUNT = 15;
+export const BERRY_REGROW_DAYS = 4;
+export const BERRY_AMOUNT = 5;

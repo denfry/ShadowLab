@@ -3,7 +3,7 @@ import { BASE_SPOIL, SPOIL_COLD_TEMP, TICKS_PER_DAY, WIN_DAY_STUB } from '../dat
 import { runNeeds } from './needs';
 import { runJobScheduler } from './jobScheduler';
 import { stepAgents } from './agent';
-import { runWork } from './work';
+import { runWork, advanceGrowth, killUnripeCrops } from './work';
 import { advanceSeason, updateOutdoorTemp } from './season';
 import { recomputeRooms, wallsDoorsSig } from './rooms';
 import { runTemperature } from './temperature';
@@ -29,6 +29,7 @@ export function tick(s: ColonyState): boolean {
   runJobScheduler(s);
   stepAgents(s);
   runWork(s);
+  advanceGrowth(s);
 
   if (s.tick % TICKS_PER_DAY === 0) {
     s.day += 1;
@@ -48,8 +49,10 @@ export function applyFoodSpoilage(s: ColonyState): void {
 }
 
 function onNewDay(s: ColonyState): void {
+  const prevSeason = s.env.season;
   const rng = new Rng(s.rngState);
   advanceSeason(s, rng);
+  if (prevSeason !== 'winter' && s.env.season === 'winter') killUnripeCrops(s);
   s.rngState = rng.seed;
   applyFoodSpoilage(s);
 
