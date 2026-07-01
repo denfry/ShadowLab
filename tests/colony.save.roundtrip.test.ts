@@ -2,7 +2,7 @@
 import { describe, it, expect } from 'vitest';
 import { createColony } from '@/games/colony/domain/createColony';
 import { toSave, fromSave } from '@/games/colony/domain/save';
-import { nodeAt, biomeAt, setNode, setBiome, passableAt, buildingIdAt, forEachTile, setPassable, idx } from '@/games/colony/systems/grid';
+import { nodeAt, biomeAt, setNode, setBiome, passableAt, buildingIdAt, forEachTile, setPassable, idx, fertilityAt, setFertility } from '@/games/colony/systems/grid';
 
 describe('save round-trip', () => {
   it('мир регенерируется из сида идентично (биомы)', () => {
@@ -78,5 +78,19 @@ describe('save: designations + new resources + bridge passability', () => {
     expect(r.designations.has(idx(12, 12, r.map.w))).toBe(true);
     expect(r.resources.stone.amount).toBe(42);
     expect(passableAt(r.map, 13, 13)).toBe(true);
+  });
+});
+
+describe('save: fields + regrowth + mutable fertility', () => {
+  it('round-trips fields, regrowCooldowns, and a fertility mutation', () => {
+    const s = createColony(101);
+    s.fields.set(idx(15, 15, s.map.w), { crop: 'wheat', stage: 'grow', progress: 40 });
+    s.regrowCooldowns.set(idx(16, 16, s.map.w), 2);
+    const before = fertilityAt(s.map, 20, 20);
+    setFertility(s.map, 20, 20, Math.min(1, before + 0.3));
+    const r = fromSave(toSave(s));
+    expect(r.fields.get(idx(15, 15, r.map.w))).toEqual({ crop: 'wheat', stage: 'grow', progress: 40 });
+    expect(r.regrowCooldowns.get(idx(16, 16, r.map.w))).toBe(2);
+    expect(fertilityAt(r.map, 20, 20)).toBeCloseTo(Math.min(1, before + 0.3), 5);
   });
 });

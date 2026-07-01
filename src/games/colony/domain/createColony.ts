@@ -62,7 +62,7 @@ export function createColony(seed: number): ColonyState {
   });
 
   return {
-    version: 7,
+    version: 8,
     seed,
     rngState: rng.seed,
     tick: 0,

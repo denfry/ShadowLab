@@ -33,7 +33,7 @@ describe('createColony', () => {
     }
   });
 
-  it('версия пейлоада = 7', () => {
-    expect(createColony(1).version).toBe(7);
+  it('версия пейлоада = 8', () => {
+    expect(createColony(1).version).toBe(8);
   });
 });

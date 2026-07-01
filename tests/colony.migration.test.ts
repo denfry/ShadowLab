@@ -6,7 +6,7 @@ import { forEachTile, roomIdAt, tempAt } from '@/games/colony/systems/grid';
 describe('phase 1 model migration', () => {
   it('initializes env, rooms, stock and tailorProgress', () => {
     const s = createColony(1);
-    expect(s.version).toBe(7);
+    expect(s.version).toBe(8);
     expect(s.env.season).toBe('spring');
     expect(s.rooms).toEqual([]);
     expect(s.roomSig).toBe('');
