@@ -48,6 +48,11 @@ function buildTargetIndex(s: ColonyState): { ix: SpatialIndex; byTile: Map<strin
     if (!s.designations.has(i)) continue; // only designated nodes are work targets
     pts.push({ x: i % s.map.w, y: Math.floor(i / s.map.w), cat: nodeCat(node.kind) });
   }
+  for (const [i, plot] of s.fields) {
+    if (plot.stage === 'grow') continue;                                // растёт пассивно, рабочий не нужен
+    if (plot.stage !== 'ready' && s.env.season === 'winter') continue;   // зимой новый посев не начинают
+    pts.push({ x: i % s.map.w, y: Math.floor(i / s.map.w), cat: 'field:work' });
+  }
   return { ix: buildIndex(s.map.w, s.map.h, CLUSTER, pts), byTile };
 }
 
@@ -55,7 +60,18 @@ function findTarget(
   s: ColonyState, from: Pt, job: JobType,
   ix: SpatialIndex, byTile: Map<string, Building>,
 ): { tile: Pt; buildingId?: string } | null {
-  if (job === 'farm' || job === 'research' || job === 'tailor') {
+  if (job === 'farm') {
+    const t = nearest(ix, s.map.w, s.map.h, from, 'field:work');
+    if (t) return { tile: t };
+    const bt = nearest(ix, s.map.w, s.map.h, from, 'job:farm', (p) => {
+      const b = byTile.get(`${p.x},${p.y}`)!;
+      return workersOn(s, b.id) < b.workSlots;
+    });
+    if (!bt) return null;
+    const b = byTile.get(`${bt.x},${bt.y}`)!;
+    return { tile: b.tile, buildingId: b.id };
+  }
+  if (job === 'research' || job === 'tailor') {
     const t = nearest(ix, s.map.w, s.map.h, from, `job:${job}`, (p) => {
       const b = byTile.get(`${p.x},${p.y}`)!;
       return workersOn(s, b.id) < b.workSlots;
