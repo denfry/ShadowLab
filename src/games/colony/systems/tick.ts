@@ -8,6 +8,7 @@ import { advanceSeason, updateOutdoorTemp } from './season';
 import { recomputeRooms, wallsDoorsSig } from './rooms';
 import { runTemperature } from './temperature';
 import { rebuildDirty } from './pathHierarchy';
+import { runRegrowth } from './regrowth';
 import { Rng } from '@/core/utils/rng';
 
 export const alive = (s: ColonyState) => s.colonists.filter((c) => c.alive);
@@ -53,6 +54,7 @@ function onNewDay(s: ColonyState): void {
   const rng = new Rng(s.rngState);
   advanceSeason(s, rng);
   if (prevSeason !== 'winter' && s.env.season === 'winter') killUnripeCrops(s);
+  runRegrowth(s, rng);
   s.rngState = rng.seed;
   applyFoodSpoilage(s);
 
