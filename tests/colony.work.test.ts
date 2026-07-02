@@ -3,26 +3,11 @@ import { createColony } from '@/games/colony/domain/createColony';
 import { runWork } from '@/games/colony/systems/work';
 import type { Building } from '@/games/colony/domain/types';
 import { MAP_W, MAP_H } from '@/games/colony/data/balance';
-import { setNode, setBiome, nodeAt, biomeAt, setBuildingId, setTemp } from '@/games/colony/systems/grid';
+import { setNode, setBiome, nodeAt, biomeAt } from '@/games/colony/systems/grid';
 
 const center = () => ({ x: Math.floor(MAP_W / 2), y: Math.floor(MAP_H / 2) });
 
 describe('work system', () => {
-  it('a farmer working at a farm raises food and gains farming xp', () => {
-    const s = createColony(1);
-    const t = center();
-    const farm: Building = { id: 'f1', type: 'farm', tile: t, workSlots: 3, jobType: 'farm', built: true, buildProgress: 30, buildRequired: 30 };
-    s.buildings.push(farm);
-    setBuildingId(s.map, t.x, t.y, 'f1');
-    const c = s.colonists[0];
-    c.task = 'work'; c.targetBuildingId = 'f1'; c.targetTile = t; c.pos = { ...t };
-    const food0 = s.resources.food.amount;
-    const xp0 = c.skills.farming.xp + c.skills.farming.level * 100;
-    runWork(s);
-    expect(s.resources.food.amount).toBeGreaterThan(food0);
-    expect(c.skills.farming.xp + c.skills.farming.level * 100).toBeGreaterThan(xp0);
-  });
-
   it('chopping a forest tile yields wood and depletes the tile', () => {
     const s = createColony(1);
     const tx = Math.floor(MAP_W / 2), ty = Math.floor(MAP_H / 2);
@@ -48,19 +33,6 @@ describe('work system', () => {
     for (let i = 0; i < 200 && !bp.built; i++) runWork(s);
     expect(bp.built).toBe(true);
     expect(c.task).toBe('idle'); // освободился после стройки
-  });
-
-  it('a farm on a frozen tile produces no food', () => {
-    const s = createColony(1);
-    const t = { x: Math.floor(s.map.w / 2), y: Math.floor(s.map.h / 2) };
-    const farm = { id: 'f1', type: 'farm' as const, tile: t, workSlots: 3, jobType: 'farm' as const, built: true, buildProgress: 30, buildRequired: 30 };
-    s.buildings.push(farm);
-    setTemp(s.map, t.x, t.y, -5); // мороз
-    const c = s.colonists[0];
-    c.task = 'work'; c.targetBuildingId = 'f1'; c.targetTile = t; c.pos = { ...t };
-    const before = s.resources.food.amount;
-    runWork(s);
-    expect(s.resources.food.amount).toBe(before);
   });
 
   it('a tailor bench turns wood into clothing', () => {

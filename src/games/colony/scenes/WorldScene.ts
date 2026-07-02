@@ -16,7 +16,9 @@ import { WaterLayer } from './render/WaterLayer';
 import { SpriteLayer } from './render/SpriteLayer';
 import { Minimap } from './render/Minimap';
 import { DesignationLayer } from './render/DesignationLayer';
+import { FieldLayer } from './render/FieldLayer';
 import { designate, type DesignationMode } from '../systems/designations';
+import { designateField, type FieldTool } from '../systems/fields';
 
 const MIN_ZOOM = 0.4;
 const MAX_ZOOM = 3.0;
@@ -41,9 +43,11 @@ export class WorldScene extends Phaser.Scene {
   private sprites!: SpriteLayer;
   private minimap!: Minimap;
   private designations!: DesignationLayer;
+  private fieldLayer!: FieldLayer;
 
   // Designation tool (chop/mine/forage/cancel) + drag-rectangle state
   private tool: DesignationMode | null = null;
+  private fieldTool: FieldTool | null = null;
   private selecting = false;
   private selStartTile = { x: 0, y: 0 };
   private selRect!: Phaser.GameObjects.Rectangle;
@@ -127,6 +131,7 @@ export class WorldScene extends Phaser.Scene {
     this.sprites = new SpriteLayer(this, this.state);
     this.minimap = new Minimap(this, this.state, (tx, ty) => this.centerOnTile(tx, ty));
     this.designations = new DesignationLayer(this, this.state);
+    this.fieldLayer = new FieldLayer(this, this.state);
 
     // Temp overlay layer — above water (-900), below Y-sorted sprites (0..~5600).
     this.tempLayer = this.add.graphics().setDepth(-500);
@@ -201,7 +206,7 @@ export class WorldScene extends Phaser.Scene {
       this.ctx.events.emit('game:state', computeHud(this.state));
       return;
     }
-    if (this.tool) {
+    if (this.tool || this.fieldTool) {
       const t = this.worldToTile(p.x, p.y);
       this.selecting = true;
       this.selStartTile = t;
@@ -226,7 +231,7 @@ export class WorldScene extends Phaser.Scene {
       this.ghost.setVisible(true);
       return;
     }
-    if (this.selecting && this.tool) {
+    if (this.selecting && (this.tool || this.fieldTool)) {
       const t = this.worldToTile(p.x, p.y);
       const x0 = Math.min(this.selStartTile.x, t.x), y0 = Math.min(this.selStartTile.y, t.y);
       const x1 = Math.max(this.selStartTile.x, t.x), y1 = Math.max(this.selStartTile.y, t.y);
@@ -249,11 +254,13 @@ export class WorldScene extends Phaser.Scene {
 
   private onPointerUp = (p: Phaser.Input.Pointer) => {
     if (this.minimap?.contains(p.x, p.y)) return;
-    if (this.selecting && this.tool) {
+    if (this.selecting && (this.tool || this.fieldTool)) {
       this.selecting = false;
       this.selRect.setVisible(false);
       const t = this.worldToTile(p.x, p.y);
-      designate(this.state, { x0: this.selStartTile.x, y0: this.selStartTile.y, x1: t.x, y1: t.y }, this.tool);
+      const rect = { x0: this.selStartTile.x, y0: this.selStartTile.y, x1: t.x, y1: t.y };
+      if (this.tool) designate(this.state, rect, this.tool);
+      else if (this.fieldTool) designateField(this.state, rect, this.fieldTool);
       this.ctx.events.emit('game:state', computeHud(this.state));
       return;
     }
@@ -279,7 +286,8 @@ export class WorldScene extends Phaser.Scene {
       case 'speed': s.speed = msg.payload.value; break;
       case 'placeBuilding': this.placingType = msg.payload.building as BuildingType; break;
       case 'cancelPlace': this.placingType = null; this.ghost.setVisible(false); break;
-      case 'setTool': this.tool = (msg.payload?.tool ?? null) as DesignationMode | null; this.placingType = null; this.ghost.setVisible(false); break;
+      case 'setTool': this.tool = (msg.payload?.tool ?? null) as DesignationMode | null; this.fieldTool = null; this.placingType = null; this.ghost.setVisible(false); break;
+      case 'setFieldTool': this.fieldTool = (msg.payload?.tool ?? null) as FieldTool | null; this.tool = null; this.placingType = null; this.ghost.setVisible(false); break;
       case 'setPriority': {
         const c = s.colonists.find((x) => x.id === msg.payload.colonistId);
         if (c) c.priorities[msg.payload.job as keyof typeof c.priorities] = msg.payload.value;
@@ -292,6 +300,7 @@ export class WorldScene extends Phaser.Scene {
         this.sprites?.destroy();
         this.minimap?.destroy();
         this.designations?.destroy();
+        this.fieldLayer?.destroy();
         this.scene.restart({ state: createColony(randomSeed()), ctx: this.ctx });
         return;
     }
@@ -334,6 +343,7 @@ export class WorldScene extends Phaser.Scene {
     this.water.update(this.time.now);
     this.sprites.update();
     this.designations.update();
+    this.fieldLayer.update();
     this.minimap.update();
     if (this.tempOverlay) this.drawTempOverlay(); else this.tempLayer.clear();
 
@@ -378,5 +388,6 @@ export class WorldScene extends Phaser.Scene {
     this.sprites?.destroy();
     this.minimap?.destroy();
     this.designations?.destroy();
+    this.fieldLayer?.destroy();
   }
 }

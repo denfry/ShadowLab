@@ -2,12 +2,15 @@ export type Biome = 'water' | 'marsh' | 'meadow' | 'grass' | 'forest' | 'rock' |
 export type NodeKind = 'wood' | 'stone' | 'clay' | 'iron' | 'gold' | 'berries' | 'fish';
 export interface ResourceNode { kind: NodeKind; amount: number; max: number; }
 
-export type ResourceId = 'food' | 'wood' | 'science' | 'stone' | 'clay' | 'iron' | 'gold';
+export type ResourceId = 'food' | 'wood' | 'science' | 'stone' | 'clay' | 'iron' | 'gold' | 'fiber';
 export type SkillId =
   | 'farming' | 'woodcutting' | 'mining' | 'building' | 'research'
   | 'cooking' | 'medicine' | 'shooting' | 'melee';
 export type TraitId = 'hardworker' | 'frail' | 'lazy' | 'optimist' | 'bloodlust' | 'clumsy';
-export type BuildingType = 'farm' | 'bedroom' | 'storage' | 'lab' | 'wall' | 'door' | 'heater' | 'tailor' | 'bridge' | 'tunnel';
+export type CropId = 'wheat' | 'potato' | 'legume' | 'flax';
+export type FieldStage = 'till' | 'plant' | 'grow' | 'ready';
+export interface FieldPlot { crop: CropId; stage: FieldStage; progress: number; }
+export type BuildingType = 'bedroom' | 'storage' | 'lab' | 'wall' | 'door' | 'heater' | 'tailor' | 'bridge' | 'tunnel';
 /** Назначаемые игроком категории работ (приоритеты 0..3). */
 export type JobType = 'farm' | 'woodcut' | 'mine' | 'forage' | 'research' | 'build' | 'tailor';
 /** Конечный автомат поведения колониста. */
@@ -96,6 +99,8 @@ export interface ColonyState {
   nav?: import('../systems/pathHierarchy').Nav; // derived, NOT serialized
   assignCursor: number; // time-slice cursor (Task 11), serialized for exact resume
   designations: Set<number>; // tile indices marked for harvest (player intent)
+  fields: Map<number, FieldPlot>;       // tile index -> field state (till/plant/grow/ready)
+  regrowCooldowns: Map<number, number>; // tile index -> days left until a depleted berries node regrows
   log: LogEntry[];
   flags: { gameOver: boolean; victory: boolean };
 }

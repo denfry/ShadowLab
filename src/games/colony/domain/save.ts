@@ -1,11 +1,11 @@
 // src/games/colony/domain/save.ts
-import type { Biome, Building, Colonist, ColonyState, LogEntry, Resource, ResourceId, ResourceNode, Room } from './types';
+import type { Biome, Building, Colonist, ColonyState, FieldPlot, LogEntry, Resource, ResourceId, ResourceNode, Room } from './types';
 import { regenerateWorld } from './worldgen';
-import { idx, setBuildingId, setPassable, setBiome, setNode, biomeAt, nodeAt, forEachTile } from '../systems/grid';
+import { idx, setBuildingId, setPassable, setBiome, setNode, biomeAt, nodeAt, forEachTile, fertilityAt, setFertility } from '../systems/grid';
 import { buildNav } from '../systems/pathHierarchy';
 import { CLUSTER } from '../data/balance';
 
-export interface TileOverride { i: number; biome?: Biome; node?: ResourceNode | null; }
+export interface TileOverride { i: number; biome?: Biome; node?: ResourceNode | null; fertility?: number; }
 
 export interface ColonySave {
   version: number;
@@ -25,6 +25,8 @@ export interface ColonySave {
   env: ColonyState['env'];
   assignCursor: number;
   designations: number[];
+  fields: Array<[number, FieldPlot]>;
+  regrowCooldowns: Array<[number, number]>;
   log: LogEntry[];
   flags: { gameOver: boolean; victory: boolean };
   overrides: TileOverride[];
@@ -37,13 +39,16 @@ function diffOverrides(s: ColonyState): TileOverride[] {
   forEachTile(s.map, (i, x, y) => {
     const cb = biomeAt(s.map, x, y), gb = biomeAt(fresh, x, y);
     const cn = nodeAt(s.map, x, y), gn = nodeAt(fresh, x, y);
+    const cf = fertilityAt(s.map, x, y), gf = fertilityAt(fresh, x, y);
     const biomeChanged = cb !== gb;
     const nodeChanged = (cn?.kind !== gn?.kind) || (cn?.amount !== gn?.amount) || (cn?.max !== gn?.max);
-    if (biomeChanged || nodeChanged) {
+    const fertilityChanged = Math.abs(cf - gf) > 1e-6;
+    if (biomeChanged || nodeChanged || fertilityChanged) {
       out.push({
         i,
         ...(biomeChanged ? { biome: cb } : {}),
         ...(nodeChanged ? { node: cn ? { ...cn } : null } : {}),
+        ...(fertilityChanged ? { fertility: cf } : {}),
       });
     }
   });
@@ -69,6 +74,8 @@ export function toSave(s: ColonyState): ColonySave {
     env: s.env,
     assignCursor: s.assignCursor,
     designations: [...s.designations],
+    fields: [...s.fields],
+    regrowCooldowns: [...s.regrowCooldowns],
     log: s.log,
     flags: s.flags,
     overrides: diffOverrides(s),
@@ -82,6 +89,7 @@ export function fromSave(p: ColonySave): ColonyState {
     const x = o.i % map.w, y = Math.floor(o.i / map.w);
     if (o.biome !== undefined) setBiome(map, x, y, o.biome);
     if (o.node !== undefined) setNode(map, x, y, o.node === null ? undefined : { ...o.node });
+    if (o.fertility !== undefined) setFertility(map, x, y, o.fertility);
   }
   // Восстановление производного из построек.
   for (const b of p.buildings) {
@@ -111,6 +119,8 @@ export function fromSave(p: ColonySave): ColonyState {
     nav,
     assignCursor: p.assignCursor ?? 0,
     designations: new Set<number>(p.designations ?? []),
+    fields: new Map(p.fields ?? []),
+    regrowCooldowns: new Map(p.regrowCooldowns ?? []),
     log: p.log,
     flags: p.flags,
   };

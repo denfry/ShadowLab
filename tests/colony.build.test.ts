@@ -9,15 +9,15 @@ import { pickStartSite } from '@/games/colony/domain/worldgen';
 const startTile = (s: ReturnType<typeof createColony>) => pickStartSite(s.map);
 
 describe('build placement', () => {
-  it('places a farm blueprint on valid grass and spends wood', () => {
+  it('places a bedroom blueprint on valid grass and spends wood', () => {
     const s = createColony(1);
     const t = startTile(s);
     const wood0 = s.resources.wood.amount;
-    const res = placeBlueprint(s, 'farm', t.x, t.y);
+    const res = placeBlueprint(s, 'bedroom', t.x, t.y);
     expect(res.ok).toBe(true);
     expect(s.resources.wood.amount).toBeLessThan(wood0);
     const b = s.buildings[s.buildings.length - 1];
-    expect(b.type).toBe('farm');
+    expect(b.type).toBe('bedroom');
     expect(b.built).toBe(false);
   });
 
@@ -34,7 +34,7 @@ describe('build placement', () => {
   it('rejects placement on an occupied tile', () => {
     const s = createColony(1);
     const t = startTile(s);
-    placeBlueprint(s, 'farm', t.x, t.y);
+    placeBlueprint(s, 'bedroom', t.x, t.y);
     expect(canPlace(s, t.x, t.y)).toBe(false);
   });
 

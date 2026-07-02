@@ -19,6 +19,7 @@ const RES_META: Record<ResourceId, { label: string; glyph: string; tone: 'good' 
   clay: { label: 'Глина', glyph: '🧱', tone: 'warn' },
   iron: { label: 'Железо', glyph: '⛓️', tone: 'accent' },
   gold: { label: 'Золото', glyph: '🪙', tone: 'accent' },
+  fiber: { label: 'Волокно', glyph: '🧵', tone: 'warn' },
 };
 
 const SEASON_LABEL: Record<string, string> = {
@@ -34,6 +35,7 @@ export function ColonyHud({ ctx }: { ctx: GameContext }) {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [tempOn, setTempOn] = useState(false);
   const [tool, setTool] = useState<'chop' | 'mine' | 'forage' | 'cancel' | null>(null);
+  const [fieldTool, setFieldToolState] = useState<'wheat' | 'potato' | 'legume' | 'flax' | 'clear' | null>(null);
 
   useEffect(() => {
     const offState = ctx.events.on('game:state', (s: ColonyHudState) => setHud(s));
@@ -50,6 +52,12 @@ export function ColonyHud({ ctx }: { ctx: GameContext }) {
     const next = tool === t ? null : t;
     setTool(next);
     cmd('setTool', { tool: next });
+  };
+
+  const pickFieldTool = (t: 'wheat' | 'potato' | 'legume' | 'flax' | 'clear') => {
+    const next = fieldTool === t ? null : t;
+    setFieldToolState(next);
+    cmd('setFieldTool', { tool: next });
   };
 
   return (
@@ -105,6 +113,31 @@ export function ColonyHud({ ctx }: { ctx: GameContext }) {
               ))}
             </div>
             <p className="mt-1 font-mono text-[0.55rem] text-muted">выбери режим, затем протяни прямоугольник по карте</p>
+          </div>
+
+          <div>
+            <p className="label-mono mb-2">Поля</p>
+            <div className="grid grid-cols-2 gap-2">
+              {([
+                { id: 'wheat', label: '🌾 Пшеница' },
+                { id: 'potato', label: '🥔 Картофель' },
+                { id: 'legume', label: '🫘 Бобовые' },
+                { id: 'flax', label: '🧵 Лён' },
+                { id: 'clear', label: '✕ Убрать' },
+              ] as const).map((t) => (
+                <button
+                  key={t.id}
+                  onClick={() => pickFieldTool(t.id)}
+                  className={cx(
+                    'rounded-xl border p-2 text-center font-display text-[0.7rem] transition-all',
+                    fieldTool === t.id ? 'border-accent/60 bg-accent/20 text-accent' : 'border-edge/60 text-ink hover:border-accent/50',
+                  )}
+                >
+                  {t.label}
+                </button>
+              ))}
+            </div>
+            <p className="mt-1 font-mono text-[0.55rem] text-muted">выбери культуру, затем протяни прямоугольник по расчищенной земле</p>
           </div>
 
           <div>

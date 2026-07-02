@@ -1,4 +1,4 @@
-import type { Biome, BuildingType, JobType, ResourceId } from '../domain/types';
+import type { Biome, BuildingType, CropId, JobType, ResourceId } from '../domain/types';
 
 export const MAP_W = 256;
 export const MAP_H = 256;
@@ -15,6 +15,7 @@ export const START_RESOURCES: Record<ResourceId, Resource_> = {
   clay: { amount: 0, capacity: 200 },
   iron: { amount: 0, capacity: 200 },
   gold: { amount: 0, capacity: 200 },
+  fiber: { amount: 0, capacity: 200 },
 };
 type Resource_ = { amount: number; capacity: number };
 
@@ -47,23 +48,23 @@ export const XP_PER_WORK_TICK = 0.6;
 export const STORAGE_CAPACITY_BONUS = 120; // +ёмкость всех ресурсов за склад
 
 export const BUILD_COST: Record<BuildingType, Partial<Record<ResourceId, number>>> = {
-  farm: { wood: 20 }, bedroom: { wood: 25 }, storage: { wood: 15 }, lab: { wood: 35 },
+  bedroom: { wood: 25 }, storage: { wood: 15 }, lab: { wood: 35 },
   wall: { wood: 5 }, door: { wood: 8 }, heater: { wood: 30 }, tailor: { wood: 25 },
   bridge: { wood: 8 }, tunnel: { wood: 5, stone: 5 },
 };
 
 export const BUILD_REQUIRED: Record<BuildingType, number> = {
-  farm: 30, bedroom: 35, storage: 25, lab: 45, wall: 8, door: 10, heater: 25, tailor: 30,
+  bedroom: 35, storage: 25, lab: 45, wall: 8, door: 10, heater: 25, tailor: 30,
   bridge: 15, tunnel: 25,
 };
 
 export const BUILDING_WORK_SLOTS: Record<BuildingType, number> = {
-  farm: 3, bedroom: 0, storage: 0, lab: 2, wall: 0, door: 0, heater: 0, tailor: 2,
+  bedroom: 0, storage: 0, lab: 2, wall: 0, door: 0, heater: 0, tailor: 2,
   bridge: 0, tunnel: 0,
 };
 
 export const BUILDING_JOB: Record<BuildingType, JobType | undefined> = {
-  farm: 'farm', lab: 'research', bedroom: undefined, storage: undefined,
+  lab: 'research', bedroom: undefined, storage: undefined,
   wall: undefined, door: undefined, heater: undefined, tailor: 'tailor',
   bridge: undefined, tunnel: undefined,
 };
@@ -152,3 +153,22 @@ export const LOD_FAR_ZOOM = 0.55;   // zoom < этого -> дальний LOD (
 export const MINIMAP_PX = 192;      // сторона миникарты в экранных пикселях
 export const WATER_ANIM_SPEED = 0.012; // скорость прокрутки воды (px/мс при базовом масштабе)
 export const TEX_DETAIL = 0.18;     // амплитуда шумовой детали биом-текстур (0..1)
+
+// ---- Столп 1B: фермерство вглубь ----
+export const TILL_BASE = 0.5;     // *skill(farming) ; вспашка тайла
+export const PLANT_BASE = 0.5;    // *skill(farming) ; посадка культуры
+export const HARVEST_BASE = 0.5;  // *skill(farming) ; сбор урожая
+export const TILL_REQUIRED = 5;
+export const PLANT_REQUIRED = 4;
+export const HARVEST_REQUIRED = 3;
+
+export const CROP_GROWTH_TICKS: Record<CropId, number> = {
+  wheat: 3 * TICKS_PER_DAY, potato: 4 * TICKS_PER_DAY, legume: 3 * TICKS_PER_DAY, flax: 4 * TICKS_PER_DAY,
+};
+export const CROP_YIELD: Record<CropId, number> = { wheat: 12, potato: 18, legume: 8, flax: 6 };
+export const CROP_FERTILITY_DELTA: Record<CropId, number> = { wheat: -0.06, potato: -0.05, legume: 0.08, flax: -0.02 };
+
+export const REGROW_CHANCE_WOOD = 0.02; // в день, на живой wood-узел
+export const WOOD_SAPLING_AMOUNT = 15;
+export const BERRY_REGROW_DAYS = 4;
+export const BERRY_AMOUNT = 5;

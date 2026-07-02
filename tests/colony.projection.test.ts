@@ -21,7 +21,7 @@ describe('hud projection', () => {
 
   it('reports building counts by type', () => {
     const s = createColony(1);
-    s.buildings.push({ id: 'f', type: 'farm', tile: { x: 0, y: 0 }, workSlots: 3, jobType: 'farm', built: true, buildProgress: 30, buildRequired: 30 });
-    expect(computeHud(s).buildingCounts.farm).toBe(1);
+    s.buildings.push({ id: 'f', type: 'lab', tile: { x: 0, y: 0 }, workSlots: 2, jobType: 'research', built: true, buildProgress: 45, buildRequired: 45 });
+    expect(computeHud(s).buildingCounts.lab).toBe(1);
   });
 });
