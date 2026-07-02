@@ -15,7 +15,7 @@
 - **Save compatibility:** bump `payloadVersion` (7→8) in BOTH `domain/createColony.ts` (`version`) and `ColonyGameModule.ts` (`COLONY_PAYLOAD_VERSION`) — done in Task 7. Old saves are rejected on mount (mechanism exists). The SoA grid is NOT serialized — it regenerates from seed; only sparse overrides + player state persist.
 - **Quality gate per task:** `npx tsc --noEmit` exits 0 AND the named tests pass before commit. When `ColonyState` gains a new required field (Task 1: `fields`/`regrowCooldowns`), `domain/save.ts`'s `fromSave` must return an object satisfying the new shape in the SAME task (stub `new Map()` is fine — real persistence lands in Task 7), exactly as 1A did for `designations` in its Task 3.
 - **UI copy:** Russian, matching existing labels.
-- **Commit style:** end commit messages with `Co-Authored-By: Claude Opus 4.8 (1M context) <noreply@anthropic.com>`. Work happens on branch `worktree-colony-pillar1b-farming`.
+- **Commit style:** обычные conventional commits, автор `denfry <dabinayo@pm.me>`, без каких-либо Co-Authored-By/AI-подписей. Work happens on branch `worktree-colony-pillar1b-farming`.
 - **Behavior-change tasks (6, 7, 11) touch code other tasks also touch** — read the *current* file content before editing; don't assume the plan's quoted snippets are still byte-for-byte current if earlier tasks in this plan already changed the file.
 
 ---
@@ -134,9 +134,7 @@ Expected: PASS, tsc exit 0.
 - [ ] **Step 5: Commit**
 
 ```bash
-git add -A && git commit -m "feat(colony): fields/regrowCooldowns state scaffold + fiber resource
-
-Co-Authored-By: Claude Opus 4.8 (1M context) <noreply@anthropic.com>"
+git add -A && git commit -m "feat(colony): fields/regrowCooldowns state scaffold + fiber resource"
 ```
 
 ---
@@ -248,9 +246,7 @@ Expected: PASS, tsc 0.
 - [ ] **Step 5: Commit**
 
 ```bash
-git add -A && git commit -m "feat(colony): designateField + grid.setFertility
-
-Co-Authored-By: Claude Opus 4.8 (1M context) <noreply@anthropic.com>"
+git add -A && git commit -m "feat(colony): designateField + grid.setFertility"
 ```
 
 ---
@@ -359,9 +355,7 @@ Expected: PASS (existing farm-building tests in `colony.jobs.test.ts` still pass
 - [ ] **Step 5: Commit**
 
 ```bash
-git add -A && git commit -m "feat(colony): scheduler targets field:work tiles for the farm job
-
-Co-Authored-By: Claude Opus 4.8 (1M context) <noreply@anthropic.com>"
+git add -A && git commit -m "feat(colony): scheduler targets field:work tiles for the farm job"
 ```
 
 ---
@@ -605,9 +599,7 @@ Expected: PASS (incl. existing wood-chop/mining tests — untouched node-harvest
 - [ ] **Step 5: Commit**
 
 ```bash
-git add -A && git commit -m "feat(colony): till/plant/grow/harvest field cycle + frost-kill on winter onset
-
-Co-Authored-By: Claude Opus 4.8 (1M context) <noreply@anthropic.com>"
+git add -A && git commit -m "feat(colony): till/plant/grow/harvest field cycle + frost-kill on winter onset"
 ```
 
 ---
@@ -743,9 +735,7 @@ Expected: PASS, tsc 0.
 - [ ] **Step 5: Commit**
 
 ```bash
-git add -A && git commit -m "feat(colony): wood sapling + berry regrowth system
-
-Co-Authored-By: Claude Opus 4.8 (1M context) <noreply@anthropic.com>"
+git add -A && git commit -m "feat(colony): wood sapling + berry regrowth system"
 ```
 
 ---
@@ -957,9 +947,7 @@ Expected: tsc 0; all three files PASS. (`tests/colony.playtest.test.ts` and `tes
 git add -A && git commit -m "feat(colony)!: remove the instant-yield farm building — fields replace it
 
 BREAKING: BuildingType.farm is gone; farming now happens exclusively
-through field designations (Tasks 1-5).
-
-Co-Authored-By: Claude Opus 4.8 (1M context) <noreply@anthropic.com>"
+through field designations (Tasks 1-5)."
 ```
 
 ---
@@ -1082,9 +1070,7 @@ Expected: PASS, tsc 0.
 - [ ] **Step 5: Commit**
 
 ```bash
-git add -A && git commit -m "feat(colony): persist fields/regrowCooldowns; mutable fertility overrides; save v8
-
-Co-Authored-By: Claude Opus 4.8 (1M context) <noreply@anthropic.com>"
+git add -A && git commit -m "feat(colony): persist fields/regrowCooldowns; mutable fertility overrides; save v8"
 ```
 
 ---
@@ -1196,9 +1182,7 @@ Expected: PASS, tsc 0, build exit 0.
 - [ ] **Step 5: Commit**
 
 ```bash
-git add -A && git commit -m "feat(colony): field overlay render layer
-
-Co-Authored-By: Claude Opus 4.8 (1M context) <noreply@anthropic.com>"
+git add -A && git commit -m "feat(colony): field overlay render layer"
 ```
 
 ---
@@ -1266,9 +1250,7 @@ Expected: tsc 0, build exit 0.
 - [ ] **Step 3: Commit**
 
 ```bash
-git add -A && git commit -m "feat(colony): field tool + drag-rectangle input in WorldScene
-
-Co-Authored-By: Claude Opus 4.8 (1M context) <noreply@anthropic.com>"
+git add -A && git commit -m "feat(colony): field tool + drag-rectangle input in WorldScene"
 ```
 
 ---
@@ -1334,9 +1316,7 @@ Expected: tsc 0, build exit 0.
 - [ ] **Step 3: Commit**
 
 ```bash
-git add -A && git commit -m "feat(colony): field toolbar in HUD
-
-Co-Authored-By: Claude Opus 4.8 (1M context) <noreply@anthropic.com>"
+git add -A && git commit -m "feat(colony): field toolbar in HUD"
 ```
 
 ---
@@ -1477,9 +1457,7 @@ Expected: PASS. If the positive playtest scenario does not survive to day 11 wit
 - [ ] **Step 4: Commit**
 
 ```bash
-git add -A && git commit -m "test(colony): playtest on fields instead of farm buildings + field determinism smoke
-
-Co-Authored-By: Claude Opus 4.8 (1M context) <noreply@anthropic.com>"
+git add -A && git commit -m "test(colony): playtest on fields instead of farm buildings + field determinism smoke"
 ```
 
 ---
@@ -1510,9 +1488,7 @@ Expected: tsc 0; all tests pass.
 - [ ] **Step 4: Commit**
 
 ```bash
-git add -A && git commit -m "test(colony): whole-suite green for Pillar 1B (fields/crops/regrowth)
-
-Co-Authored-By: Claude Opus 4.8 (1M context) <noreply@anthropic.com>"
+git add -A && git commit -m "test(colony): whole-suite green for Pillar 1B (fields/crops/regrowth)"
 ```
 
 ---
