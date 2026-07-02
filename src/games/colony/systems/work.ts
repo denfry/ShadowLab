@@ -96,7 +96,20 @@ export function runWork(s: ColonyState): void {
       const fi = idx(tx, ty, s.map.w);
       const plot = s.fields.get(fi);
       if (plot) {
-        if (tempAt(s.map, tx, ty) > FARM_FREEZE_TEMP) {
+        if (plot.stage === 'ready') {
+          // Сбор урожая не зависит от температуры — созревшую делянку можно убирать в любой сезон.
+          plot.progress += HARVEST_BASE * skillMultiplier(c.skills.farming.level) * workSpeed(c) * cf;
+          grantXp(c.skills.farming, XP_PER_WORK_TICK);
+          if (plot.progress >= HARVEST_REQUIRED) {
+            const amt = CROP_YIELD[plot.crop] * (0.5 + fertilityAt(s.map, tx, ty)) * skillMultiplier(c.skills.farming.level) * cf;
+            addResource(s, CROP_RESOURCE[plot.crop], amt);
+            setFertility(s.map, tx, ty, fertilityAt(s.map, tx, ty) + CROP_FERTILITY_DELTA[plot.crop]);
+            plot.stage = 'till'; plot.progress = 0;
+            finishWork(c);
+          }
+        } else if (plot.stage === 'grow') {
+          finishWork(c); // 'grow' — рабочий тут не нужен, освобождаем
+        } else if (tempAt(s.map, tx, ty) > FARM_FREEZE_TEMP) {
           if (plot.stage === 'till') {
             plot.progress += TILL_BASE * skillMultiplier(c.skills.farming.level) * workSpeed(c) * cf;
             grantXp(c.skills.farming, XP_PER_WORK_TICK);
@@ -105,19 +118,9 @@ export function runWork(s: ColonyState): void {
             plot.progress += PLANT_BASE * skillMultiplier(c.skills.farming.level) * workSpeed(c) * cf;
             grantXp(c.skills.farming, XP_PER_WORK_TICK);
             if (plot.progress >= PLANT_REQUIRED) { plot.stage = 'grow'; plot.progress = 0; finishWork(c); }
-          } else if (plot.stage === 'ready') {
-            plot.progress += HARVEST_BASE * skillMultiplier(c.skills.farming.level) * workSpeed(c) * cf;
-            grantXp(c.skills.farming, XP_PER_WORK_TICK);
-            if (plot.progress >= HARVEST_REQUIRED) {
-              const amt = CROP_YIELD[plot.crop] * (0.5 + fertilityAt(s.map, tx, ty)) * skillMultiplier(c.skills.farming.level) * cf;
-              addResource(s, CROP_RESOURCE[plot.crop], amt);
-              setFertility(s.map, tx, ty, fertilityAt(s.map, tx, ty) + CROP_FERTILITY_DELTA[plot.crop]);
-              plot.stage = 'till'; plot.progress = 0;
-              finishWork(c);
-            }
-          } else {
-            finishWork(c); // 'grow' — рабочий тут не нужен, освобождаем
           }
+        } else {
+          finishWork(c); // мёрзлая земля во время till/plant — освобождаем колониста для переназначения
         }
         continue;
       }

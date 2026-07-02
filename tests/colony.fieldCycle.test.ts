@@ -3,8 +3,8 @@ import { createColony } from '@/games/colony/domain/createColony';
 import { runJobScheduler } from '@/games/colony/systems/jobScheduler';
 import { setBiome, setPassable, idx } from '@/games/colony/systems/grid';
 import { runWork, advanceGrowth, killUnripeCrops } from '@/games/colony/systems/work';
-import { fertilityAt, setFertility } from '@/games/colony/systems/grid';
-import { TILL_REQUIRED, PLANT_REQUIRED, HARVEST_REQUIRED, CROP_GROWTH_TICKS } from '@/games/colony/data/balance';
+import { fertilityAt, setFertility, setTemp } from '@/games/colony/systems/grid';
+import { TILL_REQUIRED, PLANT_REQUIRED, HARVEST_REQUIRED, CROP_GROWTH_TICKS, FARM_FREEZE_TEMP } from '@/games/colony/data/balance';
 import { tick } from '@/games/colony/systems/tick';
 import { designateField } from '@/games/colony/systems/fields';
 
@@ -115,6 +115,34 @@ describe('field labor cycle', () => {
     c.task = 'work'; c.targetTile = { x: tx, y: ty }; c.targetBuildingId = undefined; c.pos = { x: tx, y: ty };
     for (let i = 0; i < HARVEST_REQUIRED * 4; i++) runWork(s);
     expect(fertilityAt(s.map, tx, ty)).toBeCloseTo(0.58, 5); // 0.5 + 0.08 (legume)
+  });
+
+  it('harvest proceeds on a frozen tile — ready-stage crops are never temperature-gated', () => {
+    const s = createColony(20);
+    const c = s.colonists[0];
+    const tx = Math.round(c.pos.x), ty = Math.round(c.pos.y);
+    setFertility(s.map, tx, ty, 0.5);
+    setTemp(s.map, tx, ty, FARM_FREEZE_TEMP); // at the freeze threshold — till/plant would be blocked here
+    s.fields.set(idx(tx, ty, s.map.w), { crop: 'wheat', stage: 'ready', progress: 0 });
+    c.task = 'work'; c.targetTile = { x: tx, y: ty }; c.targetBuildingId = undefined; c.pos = { x: tx, y: ty };
+    const food0 = s.resources.food.amount;
+    for (let i = 0; i < HARVEST_REQUIRED * 4; i++) runWork(s);
+    expect(s.resources.food.amount).toBeGreaterThan(food0);
+    expect(s.fields.get(idx(tx, ty, s.map.w))!.stage).toBe('till');
+  });
+
+  it('a colonist tilling a plot that freezes mid-work is released to idle instead of staying pinned', () => {
+    const s = createColony(21);
+    const c = s.colonists[0];
+    const tx = Math.round(c.pos.x), ty = Math.round(c.pos.y);
+    setBiome(s.map, tx, ty, 'grass'); setPassable(s.map, tx, ty, true);
+    s.fields.set(idx(tx, ty, s.map.w), { crop: 'wheat', stage: 'till', progress: 0 });
+    c.task = 'work'; c.targetTile = { x: tx, y: ty }; c.targetBuildingId = undefined; c.pos = { x: tx, y: ty };
+    setTemp(s.map, tx, ty, FARM_FREEZE_TEMP); // freezes before any work tick lands
+    runWork(s);
+    expect(c.task).toBe('idle');
+    expect(s.fields.get(idx(tx, ty, s.map.w))!.stage).toBe('till');
+    expect(s.fields.get(idx(tx, ty, s.map.w))!.progress).toBe(0);
   });
 
   it('winter onset destroys an unripe (grow-stage) crop, resetting it to till with no fertility penalty', () => {
